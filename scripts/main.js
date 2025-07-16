@@ -573,22 +573,3 @@ if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'd
 
 console.log(CONFIG.APP_NAME + " v" + CONFIG.APP_VERSION + " - Sistema de Controle Financeiro Inteligente");
 console.log('Desenvolvido por Leandro Antônio - Todos os direitos reservados.');
-
-// Definições globais para chamadas do HTML
-window.showGoals = () => {
-    try {
-        GoalsManager.updateDisplay();
-        UIManager.showSection('goals-section');
-    } catch (e) {
-        console.error("Erro ao carregar metas:", e);
-    }
-};
-
-window.showCharts = () => {
-    try {
-        ChartsManager.generateCategoryChart();
-        UIManager.showSection('charts-section');
-    } catch (e) {
-        console.error("Erro ao carregar gráficos:", e);
-    }
-};
