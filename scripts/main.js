@@ -159,7 +159,7 @@ class KonomizaApp {
                 }
             });
         }, 24 * 60 * 60 * 1000); // 24 hours
-    },
+    }
     
     // Handle file upload
     async handleFileUpload(event) {
