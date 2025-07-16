@@ -55,7 +55,7 @@ class KonomizaApp {
         } catch (error) {
             ERROR_HANDLER.handle(error, 'App Initialization');
         }
-    },
+    }
     
     // Initialize components
     initializeComponents() {
