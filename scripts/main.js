@@ -69,7 +69,7 @@ class KonomizaApp {
         
         // Setup periodic updates
         this.setupPeriodicUpdates();
-    },
+    }
     
     // Setup event listeners
     setupEventListeners() {
