@@ -1,7 +1,7 @@
 // Configuration and Constants
 const CONFIG = {
     // API Configuration
-    OPENROUTER_API_KEY: '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',
+    OPENROUTER_API_KEY: '', // Replace with your valid OpenRouter API key
     OPENROUTER_URL: 'https://openrouter.ai/api/v1/chat/completions',
     
     // Application Settings
