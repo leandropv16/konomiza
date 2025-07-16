@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Konomiza - Controle Financeiro Inteligente</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/responsive.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <a href="#" class="logo" onclick="showHome()">
+                        <span class="logo-icon">💰</span>
+                        Konomiza
+                    </a>
+                    <div class="header-actions">
+                        <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">
+                            <span id="theme-icon">🌙</span>
+                        </button>
+                        <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Mobile Menu -->
+        <nav class="mobile-menu" id="mobileMenu">
+            <div class="mobile-menu-content">
+                <button class="mobile-menu-item" onclick="showHome()">🏠 Início</button>
+                <button class="mobile-menu-item" onclick="showUploadArea()">📁 Adicionar Gastos</button>
+                <button class="mobile-menu-item" onclick="showGoals()">🎯 Metas Pessoais</button>
+                <button class="mobile-menu-item" onclick="showCharts()">📊 Gráficos</button>
+                <button class="mobile-menu-item" onclick="showCategories()">🏷️ Categorias</button>
+                <button class="mobile-menu-item" onclick="showReports()">📄 Relatórios</button>
+            </div>
+        </nav>
+
+        <!-- Ribbon Menu -->
+        <div class="ribbon">
+            <div class="container">
+                <div class="ribbon-tabs">
+                    <button class="ribbon-tab active" onclick="showRibbonTab('home')">Início</button>
+                    <button class="ribbon-tab" onclick="showRibbonTab('reports')">Relatórios</button>
+                    <button class="ribbon-tab" onclick="showRibbonTab('export')">Exportar</button>
+                    <button class="ribbon-tab" onclick="showRibbonTab('settings')">Configurações</button>
+                </div>
+                
+                <div class="ribbon-content active" id="ribbon-home">
+                    <div class="ribbon-group">
+                        <button class="ribbon-btn" onclick="showUploadArea()">
+                            <span>📁</span> Adicionar Gastos
+                        </button>
+                        <button class="ribbon-btn" onclick="showGoals()">
+                            <span>🎯</span> Metas Pessoais
+                        </button>
+                        <button class="ribbon-btn" onclick="showCharts()">
+                            <span>📊</span> Ver Gráficos
+                        </button>
+                        <button class="ribbon-btn" onclick="showAddManualTransaction()">
+                            <span>✏️</span> Adicionar Manual
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="ribbon-content" id="ribbon-reports">
+                    <div class="ribbon-group">
+                        <button class="ribbon-btn" onclick="generateReport('weekly')">
+                            <span>📄</span> Relatório Semanal
+                        </button>
+                        <button class="ribbon-btn" onclick="generateReport('monthly')">
+                            <span>📄</span> Relatório Mensal
+                        </button>
+                        <button class="ribbon-btn" onclick="showCustomPeriod()">
+                            <span>📅</span> Período Personalizado
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="ribbon-content" id="ribbon-export">
+                    <div class="ribbon-group">
+                        <button class="ribbon-btn" onclick="exportToExcel()">
+                            <span>📊</span> Exportar Excel
+                        </button>
+                        <button class="ribbon-btn" onclick="exportToPDF()">
+                            <span>📄</span> Exportar PDF
+                        </button>
+                        <button class="ribbon-btn" onclick="exportToJSON()">
+                            <span>💾</span> Backup JSON
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="ribbon-content" id="ribbon-settings">
+                    <div class="ribbon-group">
+                        <button class="ribbon-btn" onclick="showCategories()">
+                            <span>🏷️</span> Categorias
+                        </button>
+                        <button class="ribbon-btn" onclick="showColors()">
+                            <span>🎨</span> Cores
+                        </button>
+                        <button class="ribbon-btn" onclick="showAISettings()">
+                            <span>🤖</span> IA
+                        </button>
+                        <button class="ribbon-btn" onclick="showDuplicateSettings()">
+                            <span>🔄</span> Duplicatas
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="container">
+                <!-- Home Screen -->
+                <div id="home-screen" class="home-screen">
+                    <div class="home-hero">
+                        <h1 class="home-title">Konomiza</h1>
+                        <p class="home-subtitle">Controle seus gastos de forma inteligente e automatizada</p>
+                        <div class="home-stats">
+                            <div class="stat-card">
+                                <div class="stat-value" id="totalTransactions">0</div>
+                                <div class="stat-label">Transações</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="totalSpentHome">R$ 0,00</div>
+                                <div class="stat-label">Gasto Total</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="categoriesCount">0</div>
+                                <div class="stat-label">Categorias</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="home-buttons">
+                        <button class="home-btn primary" onclick="showTransactionsAndRecent()">
+                            <span class="btn-icon">💰</span>
+                            <span class="btn-text">ECONOMIZAR</span>
+                            <span class="btn-subtitle">Ver gastos recentes</span>
+                        </button>
+                        <button class="home-btn secondary" onclick="showGoals()">
+                            <span class="btn-icon">🎯</span>
+                            <span class="btn-text">METAS</span>
+                            <span class="btn-subtitle">Definir objetivos</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Upload Area -->
+                <div id="upload-area" class="upload-area hidden">
+                    <div class="upload-dropzone" onclick="document.getElementById('fileInput').click()">
+                        <div class="upload-icon">📁</div>
+                        <div class="upload-text">Clique aqui ou arraste arquivos</div>
+                        <div class="upload-subtext">Suporte para imagens (PNG, JPG) e arquivos PDF</div>
+                        <input type="file" id="fileInput" accept=".png,.jpg,.jpeg,.pdf" multiple style="display: none;">
+                    </div>
+                    
+                    <div class="upload-actions">
+                        <button class="btn btn-outline" onclick="showAddManualTransaction()">
+                            <span>✏️</span> Adicionar Manual
+                        </button>
+                        <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                            <span>📁</span> Selecionar Arquivos
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Transaction List -->
+                <div id="transaction-list" class="transaction-list hidden">
+                    <div class="section-header">
+                        <h2>Transações Extraídas</h2>
+                        <div class="section-actions">
+                            <button class="btn btn-sm btn-success" onclick="approveAllTransactions()">
+                                ✅ Aprovar Todas
+                            </button>
+                            <button class="btn btn-sm btn-warning" onclick="showDuplicateChecker()">
+                                🔄 Verificar Duplicatas
+                            </button>
+                        </div>
+                    </div>
+                    <div id="transactions" class="transactions-container"></div>
+                </div>
+
+                <!-- Transactions and Recent Combined -->
+                <div id="transactions-recent-screen" class="transactions-recent-screen hidden">
+                    <div class="section-header">
+                        <h2>Compras e Gastos Recentes</h2>
+                        <div class="section-actions">
+                            <button class="btn btn-primary" onclick="showAddManualTransaction()">
+                                <span>✏️</span> Adicionar Manual
+                            </button>
+                            <button class="btn btn-outline" onclick="showUploadArea()">
+                                <span>📁</span> Importar Arquivos
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="transactions-grid">
+                        <div class="recent-transactions-card">
+                            <h3>Transações Recentes</h3>
+                            <div id="recentTransactionsList" class="recent-list"></div>
+                        </div>
+                        
+                        <div class="quick-stats-card">
+                            <h3>Resumo Rápido</h3>
+                            <div class="quick-stats">
+                                <div class="quick-stat">
+                                    <span class="stat-label">Este Mês</span>
+                                    <span class="stat-value" id="thisMonthSpent">R$ 0,00</span>
+                                </div>
+                                <div class="quick-stat">
+                                    <span class="stat-label">Média Diária</span>
+                                    <span class="stat-value" id="dailyAverage">R$ 0,00</span>
+                                </div>
+                                <div class="quick-stat">
+                                    <span class="stat-label">Maior Gasto</span>
+                                    <span class="stat-value" id="largestExpense">R$ 0,00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Goals Screen -->
+                <div id="goals-screen" class="goals-section hidden">
+                    <div class="section-header">
+                        <h2>Metas Pessoais</h2>
+                        <div class="section-actions">
+                            <button class="btn btn-outline" onclick="resetGoals()">
+                                <span>🔄</span> Resetar
+                            </button>
+                            <button class="btn btn-primary" onclick="saveGoals()">
+                                <span>💾</span> Salvar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="goals-grid">
+                        <div class="progress-card">
+                            <h3>Progresso do Mês</h3>
+                            <div class="progress-container">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="progressFill"></div>
+                                    <div class="progress-text" id="progressText">0%</div>
+                                </div>
+                                
+                                <div class="progress-info">
+                                    <div class="progress-item">
+                                        <div class="progress-value" id="spentAmount">R$ 0,00</div>
+                                        <div class="progress-label">Gasto no Mês</div>
+                                    </div>
+                                    <div class="progress-item">
+                                        <div class="progress-value" id="remainingAmount">R$ 0,00</div>
+                                        <div class="progress-label">Disponível</div>
+                                    </div>
+                                    <div class="progress-item">
+                                        <div class="progress-value" id="daysToClose">0</div>
+                                        <div class="progress-label">Dias p/ Fechamento</div>
+                                    </div>
+                                    <div class="progress-item">
+                                        <div class="progress-value" id="bestDay">--</div>
+                                        <div class="progress-label">Melhor Dia</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="goals-form-card">
+                            <h3>Configurações</h3>
+                            <form class="goals-form" onsubmit="saveGoals(); return false;">
+                                <div class="form-group">
+                                    <label class="form-label">Meta Mensal (R$)</label>
+                                    <input type="number" class="form-input" id="monthlyGoal" 
+                                           placeholder="Ex: 3000" step="0.01" min="0">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Dia do Vencimento</label>
+                                    <input type="number" class="form-input" id="dueDate" 
+                                           min="1" max="31" placeholder="Ex: 15">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Melhor Dia para Compras</label>
+                                    <input type="number" class="form-input" id="bestBuyDate" 
+                                           min="1" max="31" placeholder="Ex: 20">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Alerta quando atingir (%)</label>
+                                    <input type="number" class="form-input" id="alertPercentage" 
+                                           min="0" max="100" placeholder="Ex: 80">
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Goals Charts Section -->
+                    <div class="goals-charts" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin: 2rem 0;">
+                        <div class="chart-card">
+                            <h3 class="chart-title">Gastos por Categoria (Este Mês)</h3>
+                            <div class="chart-container" style="height: 200px;">
+                                <canvas id="goalsCategoryChart" width="300" height="200"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-card">
+                            <h3 class="chart-title">Gastos dos Últimos 7 Dias</h3>
+                            <div class="chart-container" style="height: 200px;">
+                                <canvas id="goalsSpendingChart" width="300" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Recent Transactions in Goals -->
+                    <div class="goals-transactions">
+                        <h3>Compras Recentes</h3>
+                        <div id="goalsRecentList" class="goals-recent-list"></div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div id="charts-area" class="charts-container hidden">
+                    <div class="section-header">
+                        <h2>Análise de Gastos</h2>
+                        <div class="section-actions">
+                            <button class="btn btn-outline" onclick="refreshCharts()">
+                                <span>🔄</span> Atualizar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="charts-grid">
+                        <div class="chart-card">
+                            <h3 class="chart-title">Gastos por Categoria</h3>
+                            <div class="chart-container">
+                                <canvas id="categoryChart"></canvas>
+                            </div>
+                            <div class="chart-info">
+                                <p><small>Clique nas fatias para ver detalhes</small></p>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-card">
+                            <h3 class="chart-title">Evolução Mensal</h3>
+                            <div class="chart-container">
+                                <canvas id="monthChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-card">
+                            <h3 class="chart-title">Gastos por Dia da Semana</h3>
+                            <div class="chart-container">
+                                <canvas id="weekdayChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-card">
+                            <h3 class="chart-title">Top 10 Estabelecimentos</h3>
+                            <div class="chart-container">
+                                <canvas id="establishmentChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category Details Modal Content -->
+                <div id="category-details" class="category-details hidden">
+                    <div class="category-header">
+                        <h3 id="categoryTitle">Categoria</h3>
+                        <button class="btn btn-sm btn-outline" onclick="closeCategoryDetails()">
+                            <span>✕</span>
+                        </button>
+                    </div>
+                    <div id="categoryTransactions" class="category-transactions"></div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-content">
+                    <p class="footer-text">Sistema desenvolvido por Leandro Antônio - Todos os direitos reservados.</p>
+                    <div class="footer-links">
+                        <span class="footer-version">v2.0.0</span>
+                        <span class="footer-divider">•</span>
+                        <span class="footer-year">2024</span>
+                    </div>
+                </div>
+            </div>
+        </footer>
+        
+        <!-- Floating Search Button -->
+        <button class="floating-search" onclick="toggleSearchPopup()" title="Assistente IA">
+            <span class="search-icon">🔍</span>
+        </button>
+        
+        <!-- Search Popup -->
+        <div id="searchPopup" class="search-popup">
+            <div class="search-header">
+                <h3>Assistente IA</h3>
+                <button class="search-close" onclick="closeSearchPopup()">×</button>
+            </div>
+            
+            <div class="search-content">
+                <div class="search-input-group">
+                    <input type="text" class="search-input" id="aiQuery" 
+                           placeholder="Pergunte sobre seus gastos ou qualquer coisa...">
+                    <button class="mic-btn" onclick="startVoiceRecognition()" title="Usar voz">
+                        <span id="micIcon">🎤</span>
+                    </button>
+                </div>
+                
+                <div class="search-buttons">
+                    <button class="btn btn-primary" onclick="queryAI()">
+                        <span>🤖</span> Perguntar
+                    </button>
+                    <button class="btn btn-outline" onclick="showAIHistory()">
+                        <span>📜</span> Histórico
+                    </button>
+                </div>
+                
+                <div id="aiResponse" class="ai-response"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Título</h2>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Modal content will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p id="loadingText">Carregando...</p>
+        </div>
+    </div>
+
+    <!-- Scripts - Bibliotecas Externas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- Scripts do projeto na ordem correta -->
+    <script src="scripts/config.js"></script>
+    <script src="scripts/data.js"></script>
+    <script src="scripts/ai.js"></script>
+    <script src="scripts/categories.js"></script>
+    <script src="scripts/transactions.js"></script>
+    <script src="scripts/goals.js"></script>
+    <script src="scripts/export.js"></script>
+    <script src="scripts/mobile.js"></script>
+    <script src="scripts/utils.js"></script>
+    <script src="scripts/duplicates.js"></script>
+    <script src="scripts/main.js"></script>
+    
+    <!-- Chart.js carregado separadamente apenas quando necessário -->
+    <script>
+        // Aguarda todos os scripts carregarem antes de definir as funções
+        document.addEventListener('DOMContentLoaded', function() {
+            // Carrega Chart.js dinamicamente apenas quando a seção de gráficos for acessada
+            let chartJsLoaded = false;
+            
+            function loadChartJs() {
+                if (chartJsLoaded) return Promise.resolve();
+                
+                return new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/chart.js/4.4.0/chart.umd.js';
+                    script.onload = () => {
+                        chartJsLoaded = true;
+                        // Carrega o módulo de charts após Chart.js estar disponível
+                        const chartsScript = document.createElement('script');
+                        chartsScript.src = 'scripts/charts.js';
+                        chartsScript.onload = resolve;
+                        chartsScript.onerror = reject;
+                        document.head.appendChild(chartsScript);
+                    };
+                    script.onerror = reject;
+                    document.head.appendChild(script);
+                });
+            }
+            
+            // Salva as funções originais se existirem
+            const originalShowCharts = window.showCharts;
+            const originalShowGoals = window.showGoals;
+            
+            // Redefine a função showCharts
+            window.showCharts = async function() {
+                try {
+                    await loadChartJs();
+                    
+                    if (typeof hideAllScreens === 'function') {
+                        hideAllScreens();
+                    }
+                    
+                    const chartsArea = document.getElementById('charts-area');
+                    if (chartsArea) {
+                        chartsArea.classList.remove('hidden');
+                    }
+                    
+                    // Aguarda um pouco para garantir que Chart.js carregou completamente
+                    setTimeout(() => {
+                        if (typeof ChartsManager !== 'undefined' && ChartsManager.isWorking && ChartsManager.isWorking()) {
+                            ChartsManager.refreshAll();
+                        } else if (typeof originalShowCharts === 'function') {
+                            originalShowCharts();
+                        } else {
+                            console.warn('ChartsManager not available');
+                            showToast('Gráficos não disponíveis no momento', 'warning');
+                        }
+                    }, 500);
+                } catch (error) {
+                    console.error('Erro ao carregar gráficos:', error);
+                    showToast('Erro ao carregar gráficos', 'error');
+                }
+            };
+            
+            // Redefine a função showGoals 
+            window.showGoals = async function() {
+                try {
+                    await loadChartJs();
+                    
+                    if (typeof hideAllScreens === 'function') {
+                        hideAllScreens();
+                    }
+                    
+                    const goalsScreen = document.getElementById('goals-screen');
+                    if (goalsScreen) {
+                        goalsScreen.classList.remove('hidden');
+                    }
+                    
+                    // Atualiza display das metas
+                    if (typeof updateGoalsDisplay === 'function') {
+                        updateGoalsDisplay();
+                    } else if (typeof GoalsManager !== 'undefined' && GoalsManager.updateDisplay) {
+                        GoalsManager.updateDisplay();
+                    } else if (typeof originalShowGoals === 'function') {
+                        originalShowGoals();
+                    }
+                    
+                    // Atualiza gráficos das metas após um delay
+                    setTimeout(() => {
+                        if (typeof GoalsCharts !== 'undefined' && GoalsCharts.refreshGoalsCharts) {
+                            GoalsCharts.refreshGoalsCharts();
+                        }
+                    }, 700);
+                } catch (error) {
+                    console.error('Erro ao carregar metas:', error);
+                    // Mesmo com erro nos gráficos, mostra a tela de metas
+                    if (typeof hideAllScreens === 'function') {
+                        hideAllScreens();
+                    }
+                    const goalsScreen = document.getElementById('goals-screen');
+                    if (goalsScreen) {
+                        goalsScreen.classList.remove('hidden');
+                    }
+                    if (typeof updateGoalsDisplay === 'function') {
+                        updateGoalsDisplay();
+                    }
+                }
+            };
+        });
+    </script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</body>
+</html>
