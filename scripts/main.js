@@ -439,7 +439,7 @@ class KonomizaApp {
         const content = `
             <div class="app-info">
                 <div class="app-header">
-console.log(CONFIG.APP_NAME + " v" + CONFIG.APP_VERSION + " - Sistema de Controle Financeiro Inteligente");
+                    <h4>${CONFIG.APP_NAME} v${CONFIG.APP_VERSION}</h4>
                     <p>Sistema de Controle Financeiro Inteligente</p>
                 </div>
                 
