@@ -24,9 +24,6 @@ class KonomizaApp {
                 MobileManager.init();
             }
             
-            // Initialize charts (será substituído pelo carregamento dinâmico)
-            // ChartsManager será carregado dinamicamente quando necessário
-            
             // Initialize voice recognition
             if (STATE.settings.voiceEnabled && typeof VoiceRecognition !== 'undefined') {
                 VoiceRecognition.init();
@@ -107,7 +104,7 @@ class KonomizaApp {
         eventEmitter.on('transactionDeleted', this.handleTransactionDeleted.bind(this));
         eventEmitter.on('transactionUpdated', this.handleTransactionUpdated.bind(this));
         eventEmitter.on('themeChanged', this.handleThemeChanged.bind(this));
-    },
+    }
     
     // Apply saved theme
     applyTheme() {
@@ -116,7 +113,7 @@ class KonomizaApp {
         if (themeIcon) {
             themeIcon.textContent = STATE.currentTheme === 'light' ? '🌙' : '☀️';
         }
-    },
+    }
     
     // Setup auto-save functionality
     setupAutoSave() {
@@ -125,7 +122,7 @@ class KonomizaApp {
                 DataManager.saveAll();
             }
         }, 30000); // Save every 30 seconds
-    },
+    }
     
     // Setup periodic updates
     setupPeriodicUpdates() {
@@ -186,7 +183,7 @@ class KonomizaApp {
         
         // Reset file input
         event.target.value = '';
-    },
+    }
     
     // Process individual file
     async processFile(file) {
@@ -211,18 +208,18 @@ class KonomizaApp {
         });
         
         return transactions;
-    },
+    }
     
     // Handle drag over
     handleDragOver(event) {
         event.preventDefault();
         event.currentTarget.classList.add('dragover');
-    },
+    }
     
     // Handle drag leave
     handleDragLeave(event) {
         event.currentTarget.classList.remove('dragover');
-    },
+    }
     
     // Handle drop
     async handleDrop(event) {
@@ -247,7 +244,7 @@ class KonomizaApp {
             hideLoading();
             ERROR_HANDLER.handle(error, 'File Drop');
         }
-    },
+    }
     
     // Handle before unload
     handleBeforeUnload(event) {
@@ -260,13 +257,13 @@ class KonomizaApp {
             event.returnValue = 'Você tem alterações não salvas. Deseja realmente sair?';
             return event.returnValue;
         }
-    },
+    }
     
     // Check if there are unsaved changes
     hasUnsavedChanges() {
         // This could be enhanced to track actual changes
         return false;
-    },
+    }
     
     // Handle online event
     handleOnline() {
@@ -274,18 +271,18 @@ class KonomizaApp {
         
         // Sync data if needed
         this.syncData();
-    },
+    }
     
     // Handle offline event
     handleOffline() {
         showToast('Você está offline. Os dados serão salvos localmente.', 'warning');
-    },
+    }
     
     // Sync data when online
     async syncData() {
         // This could be enhanced to sync with a backend service
         console.log('Syncing data...');
-    },
+    }
     
     // Handle transaction added
     handleTransactionAdded(transaction) {
@@ -316,7 +313,7 @@ class KonomizaApp {
                 setTimeout(() => ChartsManager.refreshAll(), 500);
             }
         }
-    },
+    }
     
     // Handle transaction deleted
     handleTransactionDeleted(transaction) {
@@ -347,19 +344,19 @@ class KonomizaApp {
                 setTimeout(() => ChartsManager.refreshAll(), 500);
             }
         }
-    },
+    }
     
     // Handle transaction updated
     handleTransactionUpdated(transaction) {
         this.handleTransactionAdded(transaction); // Same updates needed
-    },
+    }
     
     // Handle theme changed
     handleThemeChanged(theme) {
         if (typeof ChartsManager !== 'undefined' && ChartsManager.isWorking()) {
             ChartsManager.updateColors();
         }
-    },
+    }
     
     // Check if this is the first run
     checkFirstRun() {
@@ -369,7 +366,7 @@ class KonomizaApp {
             localStorage.setItem('konomiza-first-run', 'false');
             this.showWelcomeMessage();
         }
-    },
+    }
     
     // Show welcome message
     showWelcomeMessage() {
@@ -413,7 +410,7 @@ class KonomizaApp {
         `;
         
         showModal('Bem-vindo ao Konomiza!', content);
-    },
+    }
     
     // Get app statistics
     getAppStats() {
@@ -430,7 +427,7 @@ class KonomizaApp {
             lastSaved: localStorage.getItem('konomiza-last-saved'),
             version: CONFIG.APP_VERSION
         };
-    },
+    }
     
     // Show app information
     showAppInfo() {
@@ -485,7 +482,7 @@ class KonomizaApp {
         `;
         
         showModal('Informações do Sistema', content);
-    },
+    }
     
     // Export app data
     exportAppData() {
@@ -495,7 +492,7 @@ class KonomizaApp {
             showToast('Função de exportação não disponível', 'error');
         }
         closeModal();
-    },
+    }
     
     // Import app data
     importAppData() {
@@ -505,7 +502,7 @@ class KonomizaApp {
             showToast('Função de importação não disponível', 'error');
         }
         closeModal();
-    },
+    }
     
     // Reset app
     resetApp() {
