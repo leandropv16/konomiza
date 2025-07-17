@@ -237,7 +237,7 @@ const OCRProcessor = {
 };
 
 // Smart Categorization System
-SmartCategorizer = {
+const SmartCategorizer = {
     // Categorize transaction based on patterns
     categorize: (transaction) => {
         const name = transaction.name.toLowerCase();
