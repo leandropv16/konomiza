@@ -2,15 +2,27 @@
 const GoalsManager = {
     // Update goals display
     updateDisplay: () => {
+        console.log('Updating goals display...');
         const currentMonth = new Date().toISOString().substring(0, 7);
-        const monthlyTransactions = TransactionManager.getByDateRange(
-            `${currentMonth}-01`, 
-            `${currentMonth}-31`
-        );
+        
+        let monthlyTransactions = [];
+        if (typeof TransactionManager !== 'undefined') {
+            monthlyTransactions = TransactionManager.getByDateRange(
+                `${currentMonth}-01`, 
+                `${currentMonth}-31`
+            );
+        } else {
+            // Fallback: filter transactions manually
+            monthlyTransactions = STATE.transactions.filter(t => 
+                t.date.startsWith(currentMonth)
+            );
+        }
         
         const monthlyTotal = monthlyTransactions.reduce((sum, t) => sum + t.amount, 0);
         const remaining = Math.max(0, STATE.monthlyGoals.goal - monthlyTotal);
         const progress = STATE.monthlyGoals.goal > 0 ? (monthlyTotal / STATE.monthlyGoals.goal) * 100 : 0;
+        
+        console.log('Monthly total:', monthlyTotal, 'Goal:', STATE.monthlyGoals.goal, 'Progress:', progress);
         
         const daysToClose = GoalsManager.calculateDaysToClose();
         

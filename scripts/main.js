@@ -287,9 +287,16 @@ class KonomizaApp {
     // Handle transaction added
     handleTransactionAdded(transaction) {
         updateHomeStats();
-        if (typeof updateGoalsDisplay !== 'undefined') {
-            updateGoalsDisplay();
-        }
+        
+        // Force update goals display
+        setTimeout(() => {
+            if (typeof GoalsManager !== 'undefined') {
+                GoalsManager.updateDisplay();
+            }
+            if (typeof updateGoalsDisplay !== 'undefined') {
+                updateGoalsDisplay();
+            }
+        }, 100);
         
         // Update current screen if needed
         if (!document.getElementById('transactions-recent-screen').classList.contains('hidden')) {

@@ -432,9 +432,29 @@ window.showColors = () => {
 };
 
 window.refreshCharts = () => {
-    if (typeof ChartsManager !== 'undefined' && ChartsManager.refreshAll) {
+    if (typeof Chart !== 'undefined' && typeof ChartsManager !== 'undefined' && ChartsManager.refreshAll) {
         ChartsManager.refreshAll();
+    } else {
+        showToast('Chart.js não está carregado', 'error');
     }
+};
+
+// Função específica para mostrar gráficos
+window.showCharts = () => {
+    hideAllScreens();
+    document.getElementById('charts-area').classList.remove('hidden');
+    
+    // Aguardar um pouco e tentar inicializar os gráficos
+    setTimeout(() => {
+        if (typeof Chart !== 'undefined' && typeof ChartsManager !== 'undefined') {
+            if (!ChartsManager.isWorking()) {
+                ChartsManager.init();
+            }
+            ChartsManager.refreshAll();
+        } else {
+            showToast('Chart.js não carregado. Recarregue a página.', 'error');
+        }
+    }, 300);
 };
 
 // Função para mostrar relatórios

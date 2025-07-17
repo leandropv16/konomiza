@@ -535,14 +535,23 @@ const ChartUtils = {
 
 // Initialize charts when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    // Wait a bit for other scripts to load
-    setTimeout(() => {
-        if (ChartsManager.init()) {
-            console.log('Charts initialized successfully');
-        } else {
-            console.warn('Charts initialization failed - Chart.js may not be loaded');
-        }
-    }, 1000);
+    // Initialize charts immediately when Chart.js is available
+    if (typeof Chart !== 'undefined') {
+        ChartsManager.init();
+        console.log('Charts initialized successfully');
+    } else {
+        // Wait for Chart.js to load
+        const checkChart = setInterval(() => {
+            if (typeof Chart !== 'undefined') {
+                ChartsManager.init();
+                console.log('Charts initialized successfully after waiting');
+                clearInterval(checkChart);
+            }
+        }, 100);
+        
+        // Stop checking after 10 seconds
+        setTimeout(() => clearInterval(checkChart), 10000);
+    }
 });
 
 // Listen for theme changes
