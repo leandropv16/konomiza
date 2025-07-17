@@ -459,12 +459,14 @@
     </div>
 
     <!-- Scripts - Bibliotecas Externas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chart.js/4.4.0/chart.umd.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <!-- Scripts do projeto na ordem correta -->
     <script src="scripts/config.js"></script>
     <script src="scripts/data.js"></script>
+    <script src="scripts/charts.js"></script>
     <script src="scripts/ai.js"></script>
     <script src="scripts/categories.js"></script>
     <script src="scripts/transactions.js"></script>
@@ -475,113 +477,5 @@
     <script src="scripts/duplicates.js"></script>
     <script src="scripts/main.js"></script>
     
-    <!-- Chart.js carregado separadamente apenas quando necessário -->
-    <script>
-        // Aguarda todos os scripts carregarem antes de definir as funções
-        document.addEventListener('DOMContentLoaded', function() {
-            // Carrega Chart.js dinamicamente apenas quando a seção de gráficos for acessada
-            let chartJsLoaded = false;
-            
-            function loadChartJs() {
-                if (chartJsLoaded) return Promise.resolve();
-                
-                return new Promise((resolve, reject) => {
-                    const script = document.createElement('script');
-                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/chart.js/4.4.0/chart.umd.js';
-                    script.onload = () => {
-                        chartJsLoaded = true;
-                        // Carrega o módulo de charts após Chart.js estar disponível
-                        const chartsScript = document.createElement('script');
-                        chartsScript.src = 'scripts/charts.js';
-                        chartsScript.onload = resolve;
-                        chartsScript.onerror = reject;
-                        document.head.appendChild(chartsScript);
-                    };
-                    script.onerror = reject;
-                    document.head.appendChild(script);
-                });
-            }
-            
-            // Salva as funções originais se existirem
-            const originalShowCharts = window.showCharts;
-            const originalShowGoals = window.showGoals;
-            
-            // Redefine a função showCharts
-            window.showCharts = async function() {
-                try {
-                    await loadChartJs();
-                    
-                    if (typeof hideAllScreens === 'function') {
-                        hideAllScreens();
-                    }
-                    
-                    const chartsArea = document.getElementById('charts-area');
-                    if (chartsArea) {
-                        chartsArea.classList.remove('hidden');
-                    }
-                    
-                    // Aguarda um pouco para garantir que Chart.js carregou completamente
-                    setTimeout(() => {
-                        if (typeof ChartsManager !== 'undefined' && ChartsManager.isWorking && ChartsManager.isWorking()) {
-                            ChartsManager.refreshAll();
-                        } else if (typeof originalShowCharts === 'function') {
-                            originalShowCharts();
-                        } else {
-                            console.warn('ChartsManager not available');
-                            showToast('Gráficos não disponíveis no momento', 'warning');
-                        }
-                    }, 500);
-                } catch (error) {
-                    console.error('Erro ao carregar gráficos:', error);
-                    showToast('Erro ao carregar gráficos', 'error');
-                }
-            };
-            
-            // Redefine a função showGoals 
-            window.showGoals = async function() {
-                try {
-                    await loadChartJs();
-                    
-                    if (typeof hideAllScreens === 'function') {
-                        hideAllScreens();
-                    }
-                    
-                    const goalsScreen = document.getElementById('goals-screen');
-                    if (goalsScreen) {
-                        goalsScreen.classList.remove('hidden');
-                    }
-                    
-                    // Atualiza display das metas
-                    if (typeof updateGoalsDisplay === 'function') {
-                        updateGoalsDisplay();
-                    } else if (typeof GoalsManager !== 'undefined' && GoalsManager.updateDisplay) {
-                        GoalsManager.updateDisplay();
-                    } else if (typeof originalShowGoals === 'function') {
-                        originalShowGoals();
-                    }
-                    
-                    // Atualiza gráficos das metas após um delay
-                    setTimeout(() => {
-                        if (typeof GoalsCharts !== 'undefined' && GoalsCharts.refreshGoalsCharts) {
-                            GoalsCharts.refreshGoalsCharts();
-                        }
-                    }, 700);
-                } catch (error) {
-                    console.error('Erro ao carregar metas:', error);
-                    // Mesmo com erro nos gráficos, mostra a tela de metas
-                    if (typeof hideAllScreens === 'function') {
-                        hideAllScreens();
-                    }
-                    const goalsScreen = document.getElementById('goals-screen');
-                    if (goalsScreen) {
-                        goalsScreen.classList.remove('hidden');
-                    }
-                    if (typeof updateGoalsDisplay === 'function') {
-                        updateGoalsDisplay();
-                    }
-                }
-            };
-        });
-    </script>
 </body>
 </html>

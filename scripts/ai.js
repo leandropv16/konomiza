@@ -132,6 +132,39 @@ Categorias Disponíveis: ${Object.keys(STATE.categories).join(', ')}
         const query = question.toLowerCase();
         const stats = TransactionManager.getStatistics();
         
+        // Handle expense input like "gastei 50 reais no bar"
+        const expenseMatch = query.match(/gastei\s+(\d+(?:,\d+)?)\s*reais?\s+(?:no?|na|em)\s+(.+)/);
+        if (expenseMatch) {
+            const amount = parseFloat(expenseMatch[1].replace(',', '.'));
+            const place = expenseMatch[2].trim();
+            
+            // Auto-categorize common places
+            let category = 'Outros';
+            if (place.includes('bar') || place.includes('restaurante') || place.includes('lanchonete')) {
+                category = 'Alimentação';
+            } else if (place.includes('posto') || place.includes('combustível')) {
+                category = 'Transporte';
+            } else if (place.includes('cinema') || place.includes('show') || place.includes('festa')) {
+                category = 'Lazer';
+            } else if (place.includes('farmácia') || place.includes('médico')) {
+                category = 'Saúde';
+            }
+            
+            // Add transaction
+            const transaction = {
+                name: place,
+                amount: amount,
+                date: new Date().toISOString().split('T')[0],
+                category: category,
+                source: 'ai-chat'
+            };
+            
+            if (typeof TransactionManager !== 'undefined') {
+                TransactionManager.add(transaction);
+                return `Transação adicionada: ${UTILS.formatCurrency(amount)} em "${place}" na categoria ${category}. ✅`;
+            }
+        }
+        
         // Spending patterns
         if (query.includes('gastei') || query.includes('gasto')) {
             if (query.includes('mês') || query.includes('mensal')) {
@@ -142,6 +175,31 @@ Categorias Disponíveis: ${Object.keys(STATE.categories).join(', ')}
                 );
                 const monthlyTotal = monthlyTransactions.reduce((sum, t) => sum + t.amount, 0);
                 return `Este mês você gastou ${UTILS.formatCurrency(monthlyTotal)} em ${monthlyTransactions.length} transações.`;
+            }
+            
+            // Category-specific spending
+            if (query.includes('lazer')) {
+                const currentMonth = new Date().toISOString().substring(0, 7);
+                const monthlyTransactions = TransactionManager.getByDateRange(
+                    `${currentMonth}-01`, 
+                    `${currentMonth}-31`
+                );
+                const lazerTotal = monthlyTransactions
+                    .filter(t => t.category === 'Lazer')
+                    .reduce((sum, t) => sum + t.amount, 0);
+                return `Este mês você gastou ${UTILS.formatCurrency(lazerTotal)} com lazer.`;
+            }
+            
+            if (query.includes('alimentação') || query.includes('comida') || query.includes('restaurante')) {
+                const currentMonth = new Date().toISOString().substring(0, 7);
+                const monthlyTransactions = TransactionManager.getByDateRange(
+                    `${currentMonth}-01`, 
+                    `${currentMonth}-31`
+                );
+                const alimentacaoTotal = monthlyTransactions
+                    .filter(t => t.category === 'Alimentação')
+                    .reduce((sum, t) => sum + t.amount, 0);
+                return `Este mês você gastou ${UTILS.formatCurrency(alimentacaoTotal)} com alimentação.`;
             }
             
             // Specific establishment
