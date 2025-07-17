@@ -349,7 +349,7 @@ const TransactionUI = {
             method: formData.get('method') || 'Não informado',
             category: formData.get('category') || '',
             subcategory: formData.get('subcategory') || '',
-            notes: formData.get('notes') || ''
+            notes: formData.get('notes') || '',
             currentInstallment: parseInt(formData.get('currentInstallment')) || null,
             totalInstallments: parseInt(formData.get('totalInstallments')) || null,
             status: formData.get('status') || 'normal'
