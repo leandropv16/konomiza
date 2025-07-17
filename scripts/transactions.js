@@ -34,17 +34,30 @@ const TransactionUI = {
         
         recentTransactions.forEach((transaction, index) => {
             const item = document.createElement('div');
-            item.className = 'recent-item';
+            item.className = `recent-item ${transaction.status === 'refunded' ? 'refunded' : ''}`;
             const uniqueId = transaction.id || `transaction-${index}`;
+            
+            // Formatação de parcelas
+            let installmentText = '';
+            if (transaction.currentInstallment && transaction.totalInstallments) {
+                installmentText = ` • ${transaction.currentInstallment}/${transaction.totalInstallments}`;
+            }
+            
+            // Status text
+            let statusText = '';
+            if (transaction.status === 'refunded') {
+                statusText = ' • REEMBOLSADA';
+            }
+            
             item.innerHTML = `
                 <div class="recent-info">
-                    <div class="recent-name">${transaction.name}</div>
+                    <div class="recent-name ${transaction.status === 'refunded' ? 'strikethrough' : ''}">${transaction.name}</div>
                     <div class="recent-date">
-                        ${UTILS.formatDate(transaction.date)} • ${transaction.method || 'Não informado'}
-                        ${transaction.category ? `• ${transaction.category}` : ''}
+                        ${UTILS.formatDate(transaction.date)} • ${transaction.method || 'Não informado'}${installmentText}
+                        ${transaction.category ? ` • ${transaction.category}` : ''}${statusText}
                     </div>
                 </div>
-                <div class="recent-amount">${UTILS.formatCurrency(transaction.amount)}</div>
+                <div class="recent-amount ${transaction.status === 'refunded' ? 'strikethrough' : ''}">${UTILS.formatCurrency(transaction.amount)}</div>
                 <div class="recent-actions">
                     <button class="btn btn-sm btn-outline" onclick="TransactionUI.editTransaction('${uniqueId}')" title="Editar">
                         <span>✏️</span>
@@ -100,7 +113,7 @@ const TransactionUI = {
                         
                         <div class="form-group">
                             <label class="form-label">Data *</label>
-                            <input type="date" class="form-input" name="date" required value="2025-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}">
+                            <input type="date" class="form-input" name="date" required value="${new Date().toISOString().split('T')[0]}">
                         </div>
                         
                         <div class="form-group">
@@ -131,6 +144,28 @@ const TransactionUI = {
                             <label class="form-label">Subcategoria</label>
                             <select class="form-select" name="subcategory" id="subcategorySelect">
                                 <option value="">Selecione uma categoria primeiro</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Parcelas</label>
+                            <div class="installments-group">
+                                <input type="number" class="form-input" name="currentInstallment" 
+                                       placeholder="Parcela atual" min="1" style="width: 48%;">
+                                <span style="margin: 0 2%;">/</span>
+                                <input type="number" class="form-input" name="totalInstallments" 
+                                       placeholder="Total" min="1" style="width: 48%;">
+                            </div>
+                            <small class="form-help">Ex: 3/12 (3ª parcela de 12)</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" name="status">
+                                <option value="normal">Normal</option>
+                                <option value="refunded">Reembolsada</option>
                             </select>
                         </div>
                     </div>
@@ -181,6 +216,9 @@ const TransactionUI = {
             category: formData.get('category') || '',
             subcategory: formData.get('subcategory') || '',
             notes: formData.get('notes') || '',
+            currentInstallment: parseInt(formData.get('currentInstallment')) || null,
+            totalInstallments: parseInt(formData.get('totalInstallments')) || null,
+            status: formData.get('status') || 'normal',
             source: 'manual'
         };
         
@@ -259,6 +297,30 @@ const TransactionUI = {
                         </div>
                     </div>
                     
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Parcelas</label>
+                            <div class="installments-group">
+                                <input type="number" class="form-input" name="currentInstallment" 
+                                       value="${transaction.currentInstallment || ''}" 
+                                       placeholder="Parcela atual" min="1" style="width: 48%;">
+                                <span style="margin: 0 2%;">/</span>
+                                <input type="number" class="form-input" name="totalInstallments" 
+                                       value="${transaction.totalInstallments || ''}" 
+                                       placeholder="Total" min="1" style="width: 48%;">
+                            </div>
+                            <small class="form-help">Ex: 3/12 (3ª parcela de 12)</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" name="status">
+                                <option value="normal" ${transaction.status === 'normal' ? 'selected' : ''}>Normal</option>
+                                <option value="refunded" ${transaction.status === 'refunded' ? 'selected' : ''}>Reembolsada</option>
+                            </select>
+                        </div>
+                    </div>
+                    
                     <div class="form-group">
                         <label class="form-label">Observações</label>
                         <textarea class="form-textarea" name="notes" placeholder="Observações adicionais (opcional)">${transaction.notes || ''}</textarea>
@@ -288,6 +350,9 @@ const TransactionUI = {
             category: formData.get('category') || '',
             subcategory: formData.get('subcategory') || '',
             notes: formData.get('notes') || ''
+            currentInstallment: parseInt(formData.get('currentInstallment')) || null,
+            totalInstallments: parseInt(formData.get('totalInstallments')) || null,
+            status: formData.get('status') || 'normal'
         };
         
         if (TransactionManager.update(transactionId, updates)) {
@@ -362,6 +427,20 @@ const TransactionUI = {
                     <div class="detail-item">
                         <label>Subcategoria:</label>
                         <span>${transaction.subcategory || 'Não definida'}</span>
+                    </div>
+                    
+                    ${transaction.currentInstallment && transaction.totalInstallments ? `
+                        <div class="detail-item">
+                            <label>Parcelas:</label>
+                            <span>${transaction.currentInstallment}/${transaction.totalInstallments}</span>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="detail-item">
+                        <label>Status:</label>
+                        <span class="${transaction.status === 'refunded' ? 'status-refunded' : 'status-normal'}">
+                            ${transaction.status === 'refunded' ? 'Reembolsada' : 'Normal'}
+                        </span>
                     </div>
                     
                     ${transaction.notes ? `

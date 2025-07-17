@@ -11,7 +11,7 @@ const GoalsManager = {
         
         // Filtrar transações do mês atual
         const monthlyTransactions = STATE.transactions.filter(t => {
-            return t.date && t.date.startsWith(currentMonth);
+            return t.date && t.date.startsWith(currentMonth) && t.status !== 'refunded';
         });
         
         console.log('Transações do mês:', monthlyTransactions.length);

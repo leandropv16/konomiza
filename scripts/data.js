@@ -322,19 +322,20 @@ const TransactionManager = {
     
     // Get transaction statistics
     getStatistics: () => {
-        const total = STATE.transactions.reduce((sum, t) => sum + t.amount, 0);
-        const count = STATE.transactions.length;
+        const validTransactions = STATE.transactions.filter(t => t.status !== 'refunded');
+        const total = validTransactions.reduce((sum, t) => sum + t.amount, 0);
+        const count = validTransactions.length;
         const average = count > 0 ? total / count : 0;
         
         const categoryTotals = {};
-        STATE.transactions.forEach(transaction => {
+        validTransactions.forEach(transaction => {
             if (transaction.category) {
                 categoryTotals[transaction.category] = (categoryTotals[transaction.category] || 0) + transaction.amount;
             }
         });
         
-        const largestExpense = count > 0 ? Math.max(...STATE.transactions.map(t => t.amount)) : 0;
-        const smallestExpense = count > 0 ? Math.min(...STATE.transactions.map(t => t.amount)) : 0;
+        const largestExpense = count > 0 ? Math.max(...validTransactions.map(t => t.amount)) : 0;
+        const smallestExpense = count > 0 ? Math.min(...validTransactions.map(t => t.amount)) : 0;
         
         return {
             total,
