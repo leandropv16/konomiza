@@ -411,105 +411,6 @@ class KonomizaApp {
         
         showModal('Bem-vindo ao Konomiza!', content);
     }
-    
-    // Get app statistics
-    getAppStats() {
-        const stats = typeof TransactionManager !== 'undefined' ? TransactionManager.getStatistics() : { count: 0, total: 0 };
-        const duplicateStats = typeof DuplicateManager !== 'undefined' ? DuplicateManager.getDuplicateStats() : null;
-        
-        return {
-            transactions: stats,
-            duplicates: duplicateStats,
-            categories: Object.keys(STATE.categories).length,
-            learnedPatterns: Object.keys(STATE.learnedCategories).length,
-            aiInteractions: STATE.aiHistory.length,
-            theme: STATE.currentTheme,
-            lastSaved: localStorage.getItem('konomiza-last-saved'),
-            version: CONFIG.APP_VERSION
-        };
-    }
-    
-    // Show app information
-    showAppInfo() {
-        const stats = this.getAppStats();
-        
-        const content = `
-            <div class="app-info">
-                <div class="app-header">
-                    <h4>${CONFIG.APP_NAME} v${CONFIG.APP_VERSION}</h4>
-                    <p>Sistema de Controle Financeiro Inteligente</p>
-                </div>
-                
-                <div class="app-stats">
-                    <h5>Estatísticas</h5>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <span class="stat-value">${stats.transactions.count}</span>
-                            <span class="stat-label">Transações</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value">${stats.categories}</span>
-                            <span class="stat-label">Categorias</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value">${stats.learnedPatterns}</span>
-                            <span class="stat-label">Padrões Aprendidos</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value">${stats.aiInteractions}</span>
-                            <span class="stat-label">Interações IA</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="app-actions">
-                    <button class="btn btn-outline" onclick="app.exportAppData()">
-                        <span>💾</span> Exportar Dados
-                    </button>
-                    <button class="btn btn-outline" onclick="app.importAppData()">
-                        <span>📥</span> Importar Dados
-                    </button>
-                    <button class="btn btn-danger" onclick="app.resetApp()">
-                        <span>🔄</span> Resetar App
-                    </button>
-                </div>
-                
-                <div class="app-footer">
-                    <p>Sistema desenvolvido por <strong>Leandro Antônio</strong></p>
-                    <p>Todos os direitos reservados © 2024</p>
-                </div>
-            </div>
-        `;
-        
-        showModal('Informações do Sistema', content);
-    }
-    
-    // Export app data
-    exportAppData() {
-        if (typeof exportToJSON !== 'undefined') {
-            exportToJSON();
-        } else {
-            showToast('Função de exportação não disponível', 'error');
-        }
-        closeModal();
-    }
-    
-    // Import app data
-    importAppData() {
-        if (typeof importBackup !== 'undefined') {
-            importBackup();
-        } else {
-            showToast('Função de importação não disponível', 'error');
-        }
-        closeModal();
-    }
-    
-    // Reset app
-    resetApp() {
-        if (confirm('Tem certeza que deseja resetar completamente o aplicativo? Todos os dados serão perdidos!')) {
-            DataManager.clearAll();
-        }
-    }
 }
 
 // Fixed global function for showing transactions and recent
@@ -520,6 +421,37 @@ function showTransactionsAndRecent() {
     if (typeof TransactionUI !== 'undefined') {
         TransactionUI.updateRecentTransactions();
         TransactionUI.updateQuickStats();
+    }
+}
+
+// Global functions for navigation
+function showCharts() {
+    hideAllScreens();
+    document.getElementById('charts-area').classList.remove('hidden');
+    
+    // Initialize charts if Chart.js is available
+    if (typeof Chart !== 'undefined' && typeof ChartsManager !== 'undefined') {
+        setTimeout(() => {
+            ChartsManager.refreshAll();
+        }, 300);
+    } else {
+        showToast('Chart.js não carregado. Recarregue a página.', 'error');
+    }
+}
+
+function showGoals() {
+    hideAllScreens();
+    document.getElementById('goals-screen').classList.remove('hidden');
+    
+    if (typeof GoalsManager !== 'undefined') {
+        GoalsManager.updateDisplay();
+    }
+    
+    // Initialize goals charts
+    if (typeof GoalsCharts !== 'undefined') {
+        setTimeout(() => {
+            GoalsCharts.refreshGoalsCharts();
+        }, 300);
     }
 }
 
@@ -542,31 +474,8 @@ window.addEventListener('unhandledrejection', (event) => {
     event.preventDefault();
 });
 
-// Service Worker registration (if available)
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-            .then((registration) => {
-                console.log('SW registered: ', registration);
-            })
-            .catch((registrationError) => {
-                console.log('SW registration failed: ', registrationError);
-            });
-    });
-}
-
 // Export app instance for global access
 window.app = app;
-
-// Development helpers (remove in production)
-if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') {
-    window.STATE = STATE;
-    window.CONFIG = CONFIG;
-    window.DataManager = DataManager;
-    window.TransactionManager = TransactionManager;
-    window.ChartsManager = ChartsManager;
-    window.AIAssistant = AIAssistant;
-}
 
 console.log(CONFIG.APP_NAME + " v" + CONFIG.APP_VERSION + " - Sistema de Controle Financeiro Inteligente");
 console.log('Desenvolvido por Leandro Antônio - Todos os direitos reservados.');

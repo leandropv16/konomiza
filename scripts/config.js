@@ -1,7 +1,7 @@
 // Configuration and Constants
 const CONFIG = {
     // API Configuration
-    OPENROUTER_API_KEY: 'sk-or-v1-your-api-key-here', // Replace with your valid OpenRouter API key
+    OPENROUTER_API_KEY: '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',
     OPENROUTER_URL: 'https://openrouter.ai/api/v1/chat/completions',
     
     // Application Settings
@@ -22,7 +22,7 @@ const CONFIG = {
         },
         'Lazer': {
             subcategories: ['Cinema', 'Entretenimento', 'Esportes', 'Viagem', 'Livros'],
-            patterns: ['cinema', 'teatro', 'show', 'festa', 'viagem', 'hotel', 'pousada', 'livro', 'livraria', 'jogo', 'parque', 'museu', 'netflix', 'spotify', 'amazon prime']
+            patterns: ['cinema', 'teatro', 'show', 'festa', 'viagem', 'hotel', 'pousada', 'livro', 'livraria', 'jogo', 'parque', 'museu', 'netflix', 'spotify', 'amazon prime', 'bar', 'balada', 'clube']
         },
         'Compras': {
             subcategories: ['Roupas', 'Eletrônicos', 'Casa', 'Presentes', 'Farmácia'],
