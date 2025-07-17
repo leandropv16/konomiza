@@ -280,8 +280,3 @@ function initializeCategories() {
         STATE.categories[category] = STATE.categories[category].subcategories || [];
     });
 }
-
-// Export for global access
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { CONFIG, STATE, UTILS, EventEmitter, ERROR_HANDLER };
-}
