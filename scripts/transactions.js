@@ -100,7 +100,7 @@ const TransactionUI = {
                         
                         <div class="form-group">
                             <label class="form-label">Data *</label>
-                            <input type="date" class="form-input" name="date" required value="${new Date().toISOString().split('T')[0]}">
+                            <input type="date" class="form-input" name="date" required value="2025-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}">
                         </div>
                         
                         <div class="form-group">

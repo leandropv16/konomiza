@@ -6,7 +6,7 @@ const GoalsManager = {
         
         // Pegar mês atual
         const now = new Date();
-        const currentMonth = now.toISOString().substring(0, 7); // YYYY-MM
+        const currentMonth = '2025-' + String(now.getMonth() + 1).padStart(2, '0'); // Forçar 2025
         console.log('Mês atual:', currentMonth);
         
         // Filtrar transações do mês atual

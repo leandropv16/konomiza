@@ -176,6 +176,7 @@ const UtilsExtended = {
     updateHomeStats: () => {
         if (typeof TransactionManager !== 'undefined') {
             const stats = TransactionManager.getStatistics();
+            console.log('Atualizando estatísticas home:', stats);
             
             const elements = {
                 totalTransactions: stats.count,

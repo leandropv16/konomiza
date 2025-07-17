@@ -6,7 +6,7 @@ const CONFIG = {
     
     // Application Settings
     APP_NAME: 'Konomiza',
-    APP_VERSION: '2.0.0',
+    APP_VERSION: '2.1.0',
     MAX_TRANSACTIONS_DISPLAY: 50,
     MAX_AI_HISTORY: 20,
     
