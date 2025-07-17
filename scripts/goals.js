@@ -76,7 +76,7 @@ const GoalsManager = {
         GoalsManager.updateRecentTransactions();
         
         // Update charts if available
-        if (typeof GoalsCharts !== 'undefined') {
+        if (typeof GoalsCharts !== 'undefined' && typeof Chart !== 'undefined') {
             setTimeout(() => GoalsCharts.refreshGoalsCharts(), 300);
         }
     },

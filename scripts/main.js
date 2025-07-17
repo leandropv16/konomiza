@@ -413,7 +413,7 @@ class KonomizaApp {
     }
 }
 
-// Fixed global function for showing transactions and recent
+// Global function for showing transactions and recent
 function showTransactionsAndRecent() {
     hideAllScreens();
     document.getElementById('transactions-recent-screen').classList.remove('hidden');

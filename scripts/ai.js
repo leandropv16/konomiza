@@ -1,6 +1,6 @@
 // AI Assistant Module
 const AIAssistant = {
-    // Query AI with OpenRouter
+    // Query AI with Gemini
     query: async (question, context = '') => {
         try {
             if (!question.trim()) {
@@ -11,20 +11,15 @@ const AIAssistant = {
             const financialContext = AIAssistant.prepareFinancialContext();
             const fullContext = `${financialContext}\n\n${context}`;
             
-            const response = await fetch(CONFIG.OPENROUTER_URL, {
+            const response = await fetch(`${CONFIG.GEMINI_URL}?key=${CONFIG.GEMINI_API_KEY}`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${CONFIG.OPENROUTER_API_KEY}`,
-                    'Content-Type': 'application/json',
-                    'HTTP-Referer': window.location.origin,
-                    'X-Title': `${CONFIG.APP_NAME} - Controle Financeiro`
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    model: 'anthropic/claude-3.5-sonnet',
-                    messages: [
-                        {
-                            role: 'system',
-                            content: `Você é um assistente financeiro pessoal inteligente do sistema ${CONFIG.APP_NAME}. 
+                    contents: [{
+                        parts: [{
+                            text: `Você é um assistente financeiro pessoal inteligente do sistema ${CONFIG.APP_NAME}. 
                             
                             Suas funções principais:
                             1. Responder perguntas sobre os gastos e finanças do usuário
@@ -32,23 +27,24 @@ const AIAssistant = {
                             3. Dar conselhos sobre gestão financeira
                             4. Responder perguntas gerais quando solicitado
                             5. Ajudar com funcionalidades do sistema
+                            6. Adicionar transações quando o usuário disser algo como "gastei X reais em Y"
                             
                             Contexto financeiro do usuário:
                             ${fullContext}
                             
                             Responda sempre em português brasileiro, seja claro, útil e amigável. 
-                            Use formatação HTML quando necessário (negrito, listas, etc.).
+                            Use formatação simples quando necessário.
                             Para valores monetários, use o formato R$ X,XX.
                             
-                            Se a pergunta não for sobre finanças, responda de forma útil e educativa.`
-                        },
-                        {
-                            role: 'user',
-                            content: question
-                        }
-                    ],
-                    max_tokens: 800,
-                    temperature: 0.7
+                            Se a pergunta não for sobre finanças, responda de forma útil e educativa.
+                            
+                            Pergunta do usuário: ${question}`
+                        }]
+                    }],
+                    generationConfig: {
+                        temperature: 0.7,
+                        maxOutputTokens: 800
+                    }
                 })
             });
             
@@ -57,7 +53,7 @@ const AIAssistant = {
             }
             
             const data = await response.json();
-            const aiResponse = data.choices[0]?.message?.content || 'Não foi possível obter resposta.';
+            const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Não foi possível obter resposta.';
             
             // Save to history
             AIAssistant.saveToHistory(question, aiResponse);

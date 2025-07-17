@@ -1,8 +1,8 @@
 // Configuration and Constants
 const CONFIG = {
-    // API Configuration
-    OPENROUTER_API_KEY: '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',
-    OPENROUTER_URL: 'https://openrouter.ai/api/v1/chat/completions',
+    // API Configuration - Gemini
+    GEMINI_API_KEY: 'AIzaSyCepAHJntXFzOmCO_yKRT0TMh4ZAIIeAe4',
+    GEMINI_URL: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent',
     
     // Application Settings
     APP_NAME: 'Konomiza',
