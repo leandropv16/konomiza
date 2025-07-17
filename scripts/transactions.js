@@ -508,7 +508,7 @@ function handleFileUpload(event) {
     Array.from(files).forEach(async (file) => {
         try {
             const transactions = await OCRProcessor.processFile(file);
-            const processedTransactions = OCRProcessor.processExtractedTransactions(transactions);
+            const processedTransactions = OCRProcessor.processExtractedData(transactions);
             
             // Add to state
             processedTransactions.forEach(transaction => {
@@ -555,7 +555,7 @@ function handleDrop(event) {
     Array.from(files).forEach(async (file) => {
         try {
             const transactions = await OCRProcessor.processFile(file);
-            const processedTransactions = OCRProcessor.processExtractedTransactions(transactions);
+            const processedTransactions = OCRProcessor.processExtractedData(transactions);
             
             processedTransactions.forEach(transaction => {
                 TransactionManager.add(transaction);

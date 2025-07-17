@@ -129,6 +129,11 @@ const OCRProcessor = {
         }));
     },
     
+    // Alias for compatibility
+    processExtractedTransactions: (transactions) => {
+        return OCRProcessor.processExtractedData(transactions);
+    },
+    
     // Parse monetary values correctly
     parseMonetaryValue: (text) => {
         // Remove R$, spaces and convert comma to dot
