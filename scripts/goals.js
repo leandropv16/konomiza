@@ -1,99 +1,104 @@
-// Goals Management Module - CORRIGIDO
+// Goals Management Module - COMPLETAMENTE REFEITO
 const GoalsManager = {
-    // Update goals display
+    // Atualizar display das metas
     updateDisplay: () => {
-        console.log('Updating goals display...');
-        const currentMonth = new Date().toISOString().substring(0, 7);
+        console.log('=== ATUALIZANDO METAS ===');
         
-        let monthlyTransactions = [];
-        if (typeof TransactionManager !== 'undefined') {
-            monthlyTransactions = TransactionManager.getByDateRange(
-                `${currentMonth}-01`, 
-                `${currentMonth}-31`
-            );
-        } else {
-            // Fallback: filter transactions manually
-            monthlyTransactions = STATE.transactions.filter(t => 
-                t.date.startsWith(currentMonth)
-            );
-        }
+        // Pegar mês atual
+        const now = new Date();
+        const currentMonth = now.toISOString().substring(0, 7); // YYYY-MM
+        console.log('Mês atual:', currentMonth);
         
-        const monthlyTotal = monthlyTransactions.reduce((sum, t) => sum + t.amount, 0);
-        const remaining = Math.max(0, STATE.monthlyGoals.goal - monthlyTotal);
-        const progress = STATE.monthlyGoals.goal > 0 ? (monthlyTotal / STATE.monthlyGoals.goal) * 100 : 0;
+        // Filtrar transações do mês atual
+        const monthlyTransactions = STATE.transactions.filter(t => {
+            return t.date && t.date.startsWith(currentMonth);
+        });
         
-        console.log('Monthly total:', monthlyTotal, 'Goal:', STATE.monthlyGoals.goal, 'Progress:', progress);
+        console.log('Transações do mês:', monthlyTransactions.length);
         
+        // Calcular total gasto no mês
+        const monthlyTotal = monthlyTransactions.reduce((sum, t) => {
+            const amount = parseFloat(t.amount) || 0;
+            console.log('Transação:', t.name, 'Valor:', amount);
+            return sum + amount;
+        }, 0);
+        
+        console.log('Total gasto no mês:', monthlyTotal);
+        console.log('Meta mensal:', STATE.monthlyGoals.goal);
+        
+        // Calcular valores
+        const goal = STATE.monthlyGoals.goal || 0;
+        const remaining = Math.max(0, goal - monthlyTotal);
+        const progress = goal > 0 ? (monthlyTotal / goal) * 100 : 0;
         const daysToClose = GoalsManager.calculateDaysToClose();
         
-        // Update progress bar
+        console.log('Progresso calculado:', progress + '%');
+        console.log('Restante:', remaining);
+        
+        // Atualizar barra de progresso
         const progressFill = document.getElementById('progressFill');
         const progressText = document.getElementById('progressText');
         
         if (progressFill) {
-            progressFill.style.width = Math.min(progress, 100) + '%';
+            const progressPercent = Math.min(progress, 100);
+            progressFill.style.width = progressPercent + '%';
             
-            // Change color based on progress
+            // Mudar cor baseado no progresso
             if (progress >= 100) {
-                progressFill.style.background = 'var(--danger-color, #ef4444)';
-            } else if (progress >= STATE.monthlyGoals.alertPercentage) {
-                progressFill.style.background = 'var(--warning-color, #f59e0b)';
+                progressFill.style.backgroundColor = '#ef4444'; // vermelho
+            } else if (progress >= 80) {
+                progressFill.style.backgroundColor = '#f59e0b'; // amarelo
             } else {
-                progressFill.style.background = 'var(--success-color, #10b981)';
+                progressFill.style.backgroundColor = '#10b981'; // verde
             }
+            
+            console.log('Barra atualizada para:', progressPercent + '%');
         }
         
         if (progressText) {
-            progressText.textContent = `${progress.toFixed(1)}%`;
+            progressText.textContent = Math.round(progress) + '%';
         }
         
-        // Update progress info
-        const elements = {
-            spentAmount: monthlyTotal,
-            remainingAmount: remaining,
-            daysToClose: daysToClose,
-            bestDay: STATE.monthlyGoals.bestBuyDate || 20
+        // Atualizar valores na tela
+        const updates = {
+            'spentAmount': 'R$ ' + monthlyTotal.toFixed(2).replace('.', ','),
+            'remainingAmount': 'R$ ' + remaining.toFixed(2).replace('.', ','),
+            'daysToClose': daysToClose,
+            'bestDay': STATE.monthlyGoals.bestBuyDate || 20
         };
         
-        Object.entries(elements).forEach(([id, value]) => {
+        Object.entries(updates).forEach(([id, value]) => {
             const element = document.getElementById(id);
             if (element) {
-                if (id === 'spentAmount' || id === 'remainingAmount') {
-                    element.textContent = UTILS.formatCurrency(value);
-                } else {
-                    element.textContent = value;
-                }
+                element.textContent = value;
+                console.log('Atualizado', id, 'para:', value);
+            } else {
+                console.log('Elemento não encontrado:', id);
             }
         });
         
-        // Update form inputs
-        const formElements = {
-            monthlyGoal: STATE.monthlyGoals.goal || 0,
-            dueDate: STATE.monthlyGoals.dueDate || 15,
-            bestBuyDate: STATE.monthlyGoals.bestBuyDate || 20,
-            alertPercentage: STATE.monthlyGoals.alertPercentage || 80
+        // Atualizar campos do formulário
+        const formUpdates = {
+            'monthlyGoal': STATE.monthlyGoals.goal || 0,
+            'dueDate': STATE.monthlyGoals.dueDate || 15,
+            'bestBuyDate': STATE.monthlyGoals.bestBuyDate || 20,
+            'alertPercentage': STATE.monthlyGoals.alertPercentage || 80
         };
         
-        Object.entries(formElements).forEach(([id, value]) => {
+        Object.entries(formUpdates).forEach(([id, value]) => {
             const element = document.getElementById(id);
             if (element) {
                 element.value = value;
             }
         });
         
-        // Show alerts if needed
-        GoalsManager.checkAlerts(progress, monthlyTotal);
-        
-        // Update recent transactions in goals section
+        // Atualizar lista de transações recentes
         GoalsManager.updateRecentTransactions();
         
-        // Update charts if available
-        if (typeof GoalsCharts !== 'undefined' && typeof Chart !== 'undefined') {
-            setTimeout(() => GoalsCharts.refreshGoalsCharts(), 300);
-        }
+        console.log('=== METAS ATUALIZADAS ===');
     },
     
-    // Calculate days to close
+    // Calcular dias para fechamento
     calculateDaysToClose: () => {
         const today = new Date();
         const currentDay = today.getDate();
@@ -102,88 +107,75 @@ const GoalsManager = {
         if (currentDay <= dueDate) {
             return dueDate - currentDay;
         } else {
+            // Próximo mês
             const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, dueDate);
-            return Math.ceil((nextMonth - today) / (1000 * 60 * 60 * 24));
+            const diffTime = nextMonth - today;
+            return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         }
     },
     
-    // Check and show alerts
-    checkAlerts: (progress, monthlyTotal) => {
-        const alertPercentage = STATE.monthlyGoals.alertPercentage || 80;
-        
-        if (progress >= 100) {
-            if (STATE.settings.notifications && !sessionStorage.getItem('goalExceededAlert')) {
-                showToast('⚠️ Meta mensal ultrapassada!', 'error', 5000);
-                sessionStorage.setItem('goalExceededAlert', 'true');
-            }
-        } else if (progress >= alertPercentage) {
-            const key = `goalAlertAt${Math.floor(progress / 10) * 10}`;
-            if (STATE.settings.notifications && !sessionStorage.getItem(key)) {
-                showToast(`⚠️ ${progress.toFixed(1)}% da meta mensal atingida`, 'warning', 4000);
-                sessionStorage.setItem(key, 'true');
-            }
-        }
-    },
-    
-    // Save goals
+    // Salvar metas
     save: () => {
-        const elements = ['monthlyGoal', 'dueDate', 'bestBuyDate', 'alertPercentage'];
-        const newGoals = {};
-        let hasError = false;
+        console.log('Salvando metas...');
         
-        elements.forEach(id => {
-            const element = document.getElementById(id);
-            if (element) {
-                let value = element.value;
-                
-                if (id === 'monthlyGoal') {
-                    value = parseFloat(value) || 0;
-                    if (value < 0) {
-                        showToast('Meta mensal deve ser positiva', 'error');
-                        hasError = true;
-                        return;
-                    }
-                } else if (id === 'dueDate' || id === 'bestBuyDate') {
-                    value = parseInt(value) || (id === 'dueDate' ? 15 : 20);
-                    if (value < 1 || value > 31) {
-                        showToast('Dia deve estar entre 1 e 31', 'error');
-                        hasError = true;
-                        return;
-                    }
-                } else if (id === 'alertPercentage') {
-                    value = parseInt(value) || 80;
-                    if (value < 0 || value > 100) {
-                        showToast('Porcentagem deve estar entre 0 e 100', 'error');
-                        hasError = true;
-                        return;
-                    }
-                }
-                
-                newGoals[id] = value;
-            }
-        });
+        const goalInput = document.getElementById('monthlyGoal');
+        const dueDateInput = document.getElementById('dueDate');
+        const bestBuyInput = document.getElementById('bestBuyDate');
+        const alertInput = document.getElementById('alertPercentage');
         
-        if (hasError) return;
+        if (!goalInput || !dueDateInput || !bestBuyInput || !alertInput) {
+            console.error('Campos do formulário não encontrados');
+            showToast('Erro: campos não encontrados', 'error');
+            return;
+        }
         
-        // Update state
-        STATE.monthlyGoals = {
-            goal: newGoals.monthlyGoal || 0,
-            dueDate: newGoals.dueDate || 15,
-            bestBuyDate: newGoals.bestBuyDate || 20,
-            alertPercentage: newGoals.alertPercentage || 80
+        const newGoals = {
+            goal: parseFloat(goalInput.value) || 0,
+            dueDate: parseInt(dueDateInput.value) || 15,
+            bestBuyDate: parseInt(bestBuyInput.value) || 20,
+            alertPercentage: parseInt(alertInput.value) || 80
         };
         
-        // Save to storage
-        DataManager.save(CONFIG.STORAGE_KEYS.MONTHLY_GOALS, STATE.monthlyGoals);
+        // Validações
+        if (newGoals.goal < 0) {
+            showToast('Meta deve ser positiva', 'error');
+            return;
+        }
         
-        // Update display
-        GoalsManager.updateDisplay();
+        if (newGoals.dueDate < 1 || newGoals.dueDate > 31) {
+            showToast('Dia de vencimento deve estar entre 1 e 31', 'error');
+            return;
+        }
         
+        if (newGoals.bestBuyDate < 1 || newGoals.bestBuyDate > 31) {
+            showToast('Melhor dia deve estar entre 1 e 31', 'error');
+            return;
+        }
+        
+        if (newGoals.alertPercentage < 0 || newGoals.alertPercentage > 100) {
+            showToast('Porcentagem deve estar entre 0 e 100', 'error');
+            return;
+        }
+        
+        // Salvar
+        STATE.monthlyGoals = newGoals;
+        
+        if (typeof DataManager !== 'undefined') {
+            DataManager.save(CONFIG.STORAGE_KEYS.MONTHLY_GOALS, STATE.monthlyGoals);
+        } else {
+            localStorage.setItem('konomiza-monthly-goals', JSON.stringify(STATE.monthlyGoals));
+        }
+        
+        console.log('Metas salvas:', newGoals);
         showToast('Metas salvas com sucesso!', 'success');
-        eventEmitter.emit('goalsSaved', STATE.monthlyGoals);
+        
+        // Atualizar display
+        setTimeout(() => {
+            GoalsManager.updateDisplay();
+        }, 100);
     },
     
-    // Reset goals
+    // Resetar metas
     reset: () => {
         if (confirm('Deseja realmente resetar todas as metas?')) {
             STATE.monthlyGoals = {
@@ -193,19 +185,26 @@ const GoalsManager = {
                 alertPercentage: 80
             };
             
-            DataManager.save(CONFIG.STORAGE_KEYS.MONTHLY_GOALS, STATE.monthlyGoals);
-            GoalsManager.updateDisplay();
+            if (typeof DataManager !== 'undefined') {
+                DataManager.save(CONFIG.STORAGE_KEYS.MONTHLY_GOALS, STATE.monthlyGoals);
+            } else {
+                localStorage.setItem('konomiza-monthly-goals', JSON.stringify(STATE.monthlyGoals));
+            }
             
             showToast('Metas resetadas', 'success');
-            eventEmitter.emit('goalsReset');
+            GoalsManager.updateDisplay();
         }
     },
     
-    // Update recent transactions in goals section
+    // Atualizar transações recentes na seção de metas
     updateRecentTransactions: () => {
         const container = document.getElementById('goalsRecentList');
-        if (!container) return;
+        if (!container) {
+            console.log('Container goalsRecentList não encontrado');
+            return;
+        }
         
+        // Pegar últimas 10 transações
         const recentTransactions = STATE.transactions
             .sort((a, b) => new Date(b.date) - new Date(a.date))
             .slice(0, 10);
@@ -213,287 +212,93 @@ const GoalsManager = {
         container.innerHTML = '';
         
         if (recentTransactions.length === 0) {
-            container.innerHTML = `
-                <div class="no-transactions">
-                    <p>Nenhuma transação recente</p>
-                </div>
-            `;
+            container.innerHTML = '<div class="no-transactions"><p>Nenhuma transação recente</p></div>';
             return;
         }
         
         recentTransactions.forEach((transaction, index) => {
             const item = document.createElement('div');
             item.className = 'recent-item';
-            const uniqueId = transaction.id || `goals-transaction-${index}`;
+            
+            const transactionId = transaction.id || `transaction-${index}`;
+            const amount = parseFloat(transaction.amount) || 0;
+            const formattedAmount = 'R$ ' + amount.toFixed(2).replace('.', ',');
+            const formattedDate = new Date(transaction.date).toLocaleDateString('pt-BR');
+            
             item.innerHTML = `
                 <div class="recent-info">
                     <div class="recent-name">${transaction.name}</div>
                     <div class="recent-date">
-                        ${UTILS.formatDate(transaction.date)}
-                        ${transaction.category ? `• ${transaction.category}` : ''}
+                        ${formattedDate}
+                        ${transaction.category ? ` • ${transaction.category}` : ''}
                     </div>
                 </div>
-                <div class="recent-amount">${UTILS.formatCurrency(transaction.amount)}</div>
+                <div class="recent-amount">${formattedAmount}</div>
                 <div class="recent-actions">
-                    <button class="btn btn-sm btn-outline" onclick="GoalsManager.editTransaction('${uniqueId}')" title="Editar">
-                        <span>✏️</span>
+                    <button class="btn btn-sm btn-outline" onclick="GoalsManager.editTransaction('${transactionId}')" title="Editar">
+                        ✏️
                     </button>
-                    <button class="btn btn-sm btn-danger" onclick="GoalsManager.deleteTransaction('${uniqueId}')" title="Excluir">
-                        <span>🗑️</span>
+                    <button class="btn btn-sm btn-danger" onclick="GoalsManager.deleteTransaction('${transactionId}')" title="Excluir">
+                        🗑️
                     </button>
                 </div>
             `;
+            
             container.appendChild(item);
         });
     },
     
-    // Edit transaction from goals section
+    // Editar transação
     editTransaction: (transactionId) => {
-        if (typeof TransactionUI !== 'undefined') {
+        console.log('Editando transação:', transactionId);
+        if (typeof TransactionUI !== 'undefined' && TransactionUI.editTransaction) {
             TransactionUI.editTransaction(transactionId);
         } else {
             showToast('Função de edição não disponível', 'error');
         }
     },
     
-    // Delete transaction from goals section
+    // Deletar transação
     deleteTransaction: (transactionId) => {
-        if (typeof TransactionManager !== 'undefined') {
-            if (TransactionManager.delete(transactionId)) {
-                setTimeout(() => {
-                    GoalsManager.updateDisplay();
-                    updateHomeStats();
-                }, 100);
-                showToast('Transação excluída com sucesso!', 'success');
-            }
-        } else {
-            showToast('Função de exclusão não disponível', 'error');
-        }
-    },
-    
-    // Get spending insights
-    getSpendingInsights: () => {
-        const insights = [];
-        const currentMonth = new Date().toISOString().substring(0, 7);
-        const monthlyTransactions = TransactionManager.getByDateRange(
-            `${currentMonth}-01`, 
-            `${currentMonth}-31`
-        );
+        console.log('Deletando transação:', transactionId);
         
-        if (monthlyTransactions.length === 0) {
-            return insights;
-        }
-        
-        const monthlyTotal = monthlyTransactions.reduce((sum, t) => sum + t.amount, 0);
-        const dailyAverage = monthlyTotal / new Date().getDate();
-        const projectedTotal = dailyAverage * 30;
-        
-        // Projection insight
-        if (STATE.monthlyGoals.goal > 0) {
-            const projectionDiff = projectedTotal - STATE.monthlyGoals.goal;
-            if (projectionDiff > 0) {
-                insights.push({
-                    type: 'warning',
-                    title: 'Projeção Mensal',
-                    message: `Com base na média atual, você pode ultrapassar sua meta em ${UTILS.formatCurrency(projectionDiff)}`
-                });
-            } else {
-                insights.push({
-                    type: 'success',
-                    title: 'Projeção Mensal',
-                    message: `Você está no caminho certo! Projeção: ${UTILS.formatCurrency(projectedTotal)}`
-                });
-            }
-        }
-        
-        // Best day insight
-        const daysToClose = GoalsManager.calculateDaysToClose();
-        const today = new Date().getDate();
-        const bestDay = STATE.monthlyGoals.bestBuyDate || 20;
-        
-        if (today <= bestDay && daysToClose > 0) {
-            insights.push({
-                type: 'info',
-                title: 'Melhor Dia para Compras',
-                message: `Ainda faltam ${bestDay - today} dias para o melhor dia de compras (dia ${bestDay})`
-            });
-        }
-        
-        // Category spending pattern
-        const categoryTotals = {};
-        monthlyTransactions.forEach(t => {
-            if (t.category) {
-                categoryTotals[t.category] = (categoryTotals[t.category] || 0) + t.amount;
-            }
-        });
-        
-        const topCategory = Object.entries(categoryTotals)
-            .sort((a, b) => b[1] - a[1])[0];
-        
-        if (topCategory) {
-            const percentage = (topCategory[1] / monthlyTotal) * 100;
-            insights.push({
-                type: 'info',
-                title: 'Categoria Dominante',
-                message: `${topCategory[0]} representa ${percentage.toFixed(1)}% dos seus gastos (${UTILS.formatCurrency(topCategory[1])})`
-            });
-        }
-        
-        return insights;
-    },
-    
-    // Show spending insights
-    showInsights: () => {
-        const insights = GoalsManager.getSpendingInsights();
-        
-        if (insights.length === 0) {
-            showToast('Nenhum insight disponível', 'info');
+        const transaction = STATE.transactions.find(t => t.id === transactionId);
+        if (!transaction) {
+            showToast('Transação não encontrada', 'error');
             return;
         }
         
-        const content = `
-            <div class="spending-insights">
-                <h4>Insights de Gastos</h4>
-                <div class="insights-list">
-                    ${insights.map(insight => `
-                        <div class="insight-item insight-${insight.type}">
-                            <h5>${insight.title}</h5>
-                            <p>${insight.message}</p>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-        `;
+        const amount = parseFloat(transaction.amount) || 0;
+        const formattedAmount = 'R$ ' + amount.toFixed(2).replace('.', ',');
         
-        showModal('Insights de Gastos', content);
+        if (confirm(`Deseja realmente excluir "${transaction.name}" de ${formattedAmount}?`)) {
+            // Remover da lista
+            const index = STATE.transactions.findIndex(t => t.id === transactionId);
+            if (index !== -1) {
+                STATE.transactions.splice(index, 1);
+                
+                // Salvar
+                if (typeof DataManager !== 'undefined') {
+                    DataManager.save(CONFIG.STORAGE_KEYS.TRANSACTIONS, STATE.transactions);
+                } else {
+                    localStorage.setItem('konomiza-transactions', JSON.stringify(STATE.transactions));
+                }
+                
+                showToast('Transação excluída com sucesso!', 'success');
+                
+                // Atualizar displays
+                setTimeout(() => {
+                    GoalsManager.updateDisplay();
+                    if (typeof updateHomeStats !== 'undefined') {
+                        updateHomeStats();
+                    }
+                }, 100);
+            }
+        }
     }
 };
 
-// Goals predictions and recommendations
-const GoalsPredictor = {
-    // Predict if user will exceed goal
-    predictGoalExceedance: () => {
-        const currentMonth = new Date().toISOString().substring(0, 7);
-        const monthlyTransactions = TransactionManager.getByDateRange(
-            `${currentMonth}-01`, 
-            `${currentMonth}-31`
-        );
-        
-        if (monthlyTransactions.length === 0 || STATE.monthlyGoals.goal === 0) {
-            return null;
-        }
-        
-        const monthlyTotal = monthlyTransactions.reduce((sum, t) => sum + t.amount, 0);
-        const currentDay = new Date().getDate();
-        const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
-        
-        const dailyAverage = monthlyTotal / currentDay;
-        const projectedTotal = dailyAverage * daysInMonth;
-        
-        const exceedance = projectedTotal - STATE.monthlyGoals.goal;
-        const probability = exceedance > 0 ? Math.min(90, (exceedance / STATE.monthlyGoals.goal) * 100 + 50) : 0;
-        
-        return {
-            willExceed: exceedance > 0,
-            exceedanceAmount: exceedance,
-            probability: probability,
-            projectedTotal: projectedTotal,
-            recommendedDailyBudget: (STATE.monthlyGoals.goal - monthlyTotal) / (daysInMonth - currentDay)
-        };
-    },
-    
-    // Get spending recommendations
-    getRecommendations: () => {
-        const prediction = GoalsPredictor.predictGoalExceedance();
-        const recommendations = [];
-        
-        if (!prediction) {
-            recommendations.push({
-                type: 'info',
-                title: 'Configure sua meta',
-                message: 'Defina uma meta mensal para receber recomendações personalizadas'
-            });
-            return recommendations;
-        }
-        
-        if (prediction.willExceed) {
-            recommendations.push({
-                type: 'warning',
-                title: 'Risco de Ultrapassar Meta',
-                message: `Há ${prediction.probability.toFixed(0)}% de chance de ultrapassar sua meta em ${UTILS.formatCurrency(prediction.exceedanceAmount)}`
-            });
-            
-            if (prediction.recommendedDailyBudget > 0) {
-                recommendations.push({
-                    type: 'info',
-                    title: 'Orçamento Diário Recomendado',
-                    message: `Para não ultrapassar a meta, limite seus gastos a ${UTILS.formatCurrency(prediction.recommendedDailyBudget)} por dia`
-                });
-            }
-        } else {
-            recommendations.push({
-                type: 'success',
-                title: 'Meta Controlada',
-                message: `Você está no caminho certo! Projeção: ${UTILS.formatCurrency(prediction.projectedTotal)}`
-            });
-        }
-        
-        // Category-specific recommendations
-        const categoryRecommendations = GoalsPredictor.getCategoryRecommendations();
-        recommendations.push(...categoryRecommendations);
-        
-        return recommendations;
-    },
-    
-    // Get category-specific recommendations
-    getCategoryRecommendations: () => {
-        const currentMonth = new Date().toISOString().substring(0, 7);
-        const monthlyTransactions = TransactionManager.getByDateRange(
-            `${currentMonth}-01`, 
-            `${currentMonth}-31`
-        );
-        
-        const categoryTotals = {};
-        monthlyTransactions.forEach(t => {
-            if (t.category) {
-                categoryTotals[t.category] = (categoryTotals[t.category] || 0) + t.amount;
-            }
-        });
-        
-        const recommendations = [];
-        const sortedCategories = Object.entries(categoryTotals)
-            .sort((a, b) => b[1] - a[1]);
-        
-        // Top spending category
-        if (sortedCategories.length > 0) {
-            const [topCategory, topAmount] = sortedCategories[0];
-            const totalSpent = Object.values(categoryTotals).reduce((sum, amount) => sum + amount, 0);
-            const percentage = (topAmount / totalSpent) * 100;
-            
-            if (percentage > 40) {
-                recommendations.push({
-                    type: 'warning',
-                    title: 'Categoria Dominante',
-                    message: `${topCategory} representa ${percentage.toFixed(1)}% dos seus gastos. Considere revisar esta categoria.`
-                });
-            }
-        }
-        
-        // Zero spending categories
-        const unusedCategories = Object.keys(STATE.categories).filter(cat => !categoryTotals[cat]);
-        if (unusedCategories.length > 0 && sortedCategories.length > 0) {
-            recommendations.push({
-                type: 'info',
-                title: 'Categorias Não Utilizadas',
-                message: `Você tem ${unusedCategories.length} categorias sem gastos este mês. Considere removê-las ou utilizá-las.`
-            });
-        }
-        
-        return recommendations;
-    }
-};
-
-// Global functions
+// Funções globais
 function saveGoals() {
     GoalsManager.save();
 }
@@ -507,37 +312,49 @@ function updateGoalsDisplay() {
 }
 
 function showGoals() {
-    hideAllScreens();
-    document.getElementById('goals-screen').classList.remove('hidden');
-    GoalsManager.updateDisplay();
+    console.log('Mostrando tela de metas');
+    
+    if (typeof hideAllScreens !== 'undefined') {
+        hideAllScreens();
+    }
+    
+    const goalsScreen = document.getElementById('goals-screen');
+    if (goalsScreen) {
+        goalsScreen.classList.remove('hidden');
+        
+        // Atualizar após um pequeno delay
+        setTimeout(() => {
+            GoalsManager.updateDisplay();
+        }, 100);
+    } else {
+        console.error('Tela de metas não encontrada');
+    }
 }
 
-function showSpendingInsights() {
-    GoalsManager.showInsights();
+// Escutar mudanças nas transações
+if (typeof eventEmitter !== 'undefined') {
+    eventEmitter.on('transactionAdded', () => {
+        console.log('Transação adicionada - atualizando metas');
+        setTimeout(() => GoalsManager.updateDisplay(), 200);
+    });
+    
+    eventEmitter.on('transactionDeleted', () => {
+        console.log('Transação deletada - atualizando metas');
+        setTimeout(() => GoalsManager.updateDisplay(), 200);
+    });
+    
+    eventEmitter.on('transactionUpdated', () => {
+        console.log('Transação atualizada - atualizando metas');
+        setTimeout(() => GoalsManager.updateDisplay(), 200);
+    });
 }
 
-// Auto-update goals display
+// Auto-atualizar metas a cada minuto
 setInterval(() => {
-    if (!document.getElementById('goals-screen').classList.contains('hidden')) {
+    const goalsScreen = document.getElementById('goals-screen');
+    if (goalsScreen && !goalsScreen.classList.contains('hidden')) {
         GoalsManager.updateDisplay();
     }
-}, 60000); // Update every minute
+}, 60000);
 
-// Listen for transaction changes
-eventEmitter.on('transactionAdded', () => {
-    if (!document.getElementById('goals-screen').classList.contains('hidden')) {
-        setTimeout(() => GoalsManager.updateDisplay(), 300);
-    }
-});
-
-eventEmitter.on('transactionUpdated', () => {
-    if (!document.getElementById('goals-screen').classList.contains('hidden')) {
-        setTimeout(() => GoalsManager.updateDisplay(), 300);
-    }
-});
-
-eventEmitter.on('transactionDeleted', () => {
-    if (!document.getElementById('goals-screen').classList.contains('hidden')) {
-        setTimeout(() => GoalsManager.updateDisplay(), 300);
-    }
-});
+console.log('Goals.js carregado - versão simplificada');

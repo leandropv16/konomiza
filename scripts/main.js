@@ -290,12 +290,8 @@ class KonomizaApp {
         
         // Force update goals display
         setTimeout(() => {
-            if (typeof GoalsManager !== 'undefined') {
-                GoalsManager.updateDisplay();
-            }
-            if (typeof updateGoalsDisplay !== 'undefined') {
-                updateGoalsDisplay();
-            }
+            console.log('Transação adicionada - forçando atualização das metas');
+            updateGoalsDisplay();
         }, 100);
         
         // Update current screen if needed
@@ -325,9 +321,12 @@ class KonomizaApp {
     // Handle transaction deleted
     handleTransactionDeleted(transaction) {
         updateHomeStats();
-        if (typeof updateGoalsDisplay !== 'undefined') {
+        
+        // Force update goals display
+        setTimeout(() => {
+            console.log('Transação deletada - forçando atualização das metas');
             updateGoalsDisplay();
-        }
+        }, 100);
         
         // Update current screen if needed
         if (!document.getElementById('transactions-recent-screen').classList.contains('hidden')) {
