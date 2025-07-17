@@ -1,77 +1,91 @@
-// Charts Module using Chart.js - CORRIGIDO
+// Charts Module - VERSÃO SIMPLIFICADA E CORRIGIDA
 const ChartsManager = {
     charts: {},
+    isInitialized: false,
     
     // Initialize charts
     init: () => {
+        console.log('Inicializando ChartsManager...');
+        
         if (typeof Chart === 'undefined') {
-            console.warn('Chart.js not loaded - Charts will not work');
+            console.error('Chart.js não está disponível');
             return false;
         }
         
-        // Set default chart options
+        console.log('Chart.js disponível, configurando...');
+        
+        // Configurações básicas do Chart.js
         Chart.defaults.responsive = true;
         Chart.defaults.maintainAspectRatio = false;
-        Chart.defaults.plugins.legend.position = 'bottom';
-        Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-        Chart.defaults.plugins.tooltip.titleColor = '#ffffff';
-        Chart.defaults.plugins.tooltip.bodyColor = '#ffffff';
-        Chart.defaults.plugins.tooltip.cornerRadius = 8;
         
-        // Apply theme colors
-        ChartsManager.updateColors();
-        
+        ChartsManager.isInitialized = true;
+        console.log('ChartsManager inicializado com sucesso');
         return true;
     },
     
-    // Generate category pie chart
+    // Verificar se está funcionando
+    isWorking: () => {
+        return typeof Chart !== 'undefined' && ChartsManager.isInitialized;
+    },
+    
+    // Gráfico de categorias (pizza simples)
     generateCategoryChart: () => {
+        console.log('Gerando gráfico de categorias...');
+        
         const canvas = document.getElementById('categoryChart');
         if (!canvas) {
-            console.warn('Category chart canvas not found');
+            console.error('Canvas categoryChart não encontrado');
             return;
         }
         
-        const ctx = canvas.getContext('2d');
+        if (!ChartsManager.isWorking()) {
+            console.error('ChartsManager não está funcionando');
+            ChartsManager.showNoDataMessage(canvas.getContext('2d'), 'Chart.js não carregado');
+            return;
+        }
         
-        // Destroy existing chart
+        // Destruir gráfico existente
         if (ChartsManager.charts.categoryChart) {
             ChartsManager.charts.categoryChart.destroy();
             delete ChartsManager.charts.categoryChart;
         }
         
-        // Calculate category totals
+        // Calcular totais por categoria
         const categoryTotals = {};
         STATE.transactions.forEach(transaction => {
             if (transaction.category && transaction.amount > 0) {
-                categoryTotals[transaction.category] = (categoryTotals[transaction.category] || 0) + transaction.amount;
+                const cat = transaction.category;
+                categoryTotals[cat] = (categoryTotals[cat] || 0) + transaction.amount;
             }
         });
         
         const categories = Object.keys(categoryTotals);
         const amounts = Object.values(categoryTotals);
         
+        console.log('Categorias encontradas:', categories);
+        console.log('Valores:', amounts);
+        
         if (categories.length === 0) {
-            ChartsManager.showNoDataMessage(ctx, 'Nenhuma categoria com gastos');
+            ChartsManager.showNoDataMessage(canvas.getContext('2d'), 'Nenhuma categoria com gastos');
             return;
         }
         
-        // Generate colors
-        const colors = categories.map((category, index) => {
-            return STATE.customColors[category] || CONFIG.CHART_COLORS[index % CONFIG.CHART_COLORS.length];
-        });
+        // Cores simples
+        const colors = [
+            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', 
+            '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
+        ];
         
         try {
-            ChartsManager.charts.categoryChart = new Chart(ctx, {
+            console.log('Criando gráfico de pizza...');
+            ChartsManager.charts.categoryChart = new Chart(canvas, {
                 type: 'pie',
                 data: {
                     labels: categories,
                     datasets: [{
                         data: amounts,
-                        backgroundColor: colors,
-                        borderColor: colors.map(color => color + '80'),
-                        borderWidth: 2,
-                        hoverBorderWidth: 4
+                        backgroundColor: colors.slice(0, categories.length),
+                        borderWidth: 2
                     }]
                 },
                 options: {
@@ -79,65 +93,45 @@ const ChartsManager = {
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            position: 'bottom',
-                            labels: {
-                                padding: 20,
-                                usePointStyle: true,
-                                font: {
-                                    size: 12
-                                }
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: (context) => {
-                                    const label = context.label || '';
-                                    const value = UTILS.formatCurrency(context.parsed);
-                                    const percentage = ((context.parsed / amounts.reduce((a, b) => a + b, 0)) * 100).toFixed(1);
-                                    return `${label}: ${value} (${percentage}%)`;
-                                }
-                            }
+                            position: 'bottom'
                         }
-                    },
-                    onClick: (event, elements) => {
-                        if (elements.length > 0) {
-                            const index = elements[0].index;
-                            const category = categories[index];
-                            ChartsManager.showCategoryDetails(category);
-                        }
-                    },
-                    onHover: (event, elements) => {
-                        canvas.style.cursor = elements.length > 0 ? 'pointer' : 'default';
                     }
                 }
             });
+            console.log('Gráfico de categorias criado com sucesso');
         } catch (error) {
-            console.error('Error creating category chart:', error);
-            ChartsManager.showNoDataMessage(ctx, 'Erro ao carregar gráfico');
+            console.error('Erro ao criar gráfico de categorias:', error);
+            ChartsManager.showNoDataMessage(canvas.getContext('2d'), 'Erro ao criar gráfico');
         }
     },
     
-    // Generate monthly spending chart
+    // Gráfico mensal (barras simples)
     generateMonthChart: () => {
+        console.log('Gerando gráfico mensal...');
+        
         const canvas = document.getElementById('monthChart');
         if (!canvas) {
-            console.warn('Month chart canvas not found');
+            console.error('Canvas monthChart não encontrado');
             return;
         }
         
-        const ctx = canvas.getContext('2d');
+        if (!ChartsManager.isWorking()) {
+            console.error('ChartsManager não está funcionando');
+            ChartsManager.showNoDataMessage(canvas.getContext('2d'), 'Chart.js não carregado');
+            return;
+        }
         
-        // Destroy existing chart
+        // Destruir gráfico existente
         if (ChartsManager.charts.monthChart) {
             ChartsManager.charts.monthChart.destroy();
             delete ChartsManager.charts.monthChart;
         }
         
-        // Calculate monthly totals
+        // Calcular totais mensais
         const monthlyTotals = {};
         STATE.transactions.forEach(transaction => {
             if (transaction.amount > 0) {
-                const month = transaction.date.substring(0, 7);
+                const month = transaction.date.substring(0, 7); // YYYY-MM
                 monthlyTotals[month] = (monthlyTotals[month] || 0) + transaction.amount;
             }
         });
@@ -145,27 +139,32 @@ const ChartsManager = {
         const months = Object.keys(monthlyTotals).sort();
         const amounts = months.map(month => monthlyTotals[month]);
         
+        console.log('Meses encontrados:', months);
+        console.log('Valores mensais:', amounts);
+        
         if (months.length === 0) {
-            ChartsManager.showNoDataMessage(ctx, 'Nenhum dado mensal disponível');
+            ChartsManager.showNoDataMessage(canvas.getContext('2d'), 'Nenhum dado mensal');
             return;
         }
         
+        // Converter meses para formato legível
+        const monthLabels = months.map(month => {
+            const date = new Date(month + '-01');
+            return date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+        });
+        
         try {
-            ChartsManager.charts.monthChart = new Chart(ctx, {
+            console.log('Criando gráfico de barras...');
+            ChartsManager.charts.monthChart = new Chart(canvas, {
                 type: 'bar',
                 data: {
-                    labels: months.map(month => {
-                        const date = new Date(month + '-01');
-                        return date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
-                    }),
+                    labels: monthLabels,
                     datasets: [{
                         label: 'Gastos Mensais',
                         data: amounts,
-                        backgroundColor: CONFIG.CHART_COLORS[0] + '80',
-                        borderColor: CONFIG.CHART_COLORS[0],
-                        borderWidth: 2,
-                        borderRadius: 4,
-                        borderSkipped: false
+                        backgroundColor: '#36A2EB',
+                        borderColor: '#36A2EB',
+                        borderWidth: 1
                     }]
                 },
                 options: {
@@ -174,73 +173,70 @@ const ChartsManager = {
                     plugins: {
                         legend: {
                             display: false
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: (context) => {
-                                    return `Gasto: ${UTILS.formatCurrency(context.parsed.y)}`;
-                                }
-                            }
                         }
                     },
                     scales: {
                         y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: (value) => UTILS.formatCurrency(value)
-                            }
+                            beginAtZero: true
                         }
                     }
                 }
             });
+            console.log('Gráfico mensal criado com sucesso');
         } catch (error) {
-            console.error('Error creating month chart:', error);
-            ChartsManager.showNoDataMessage(ctx, 'Erro ao carregar gráfico');
+            console.error('Erro ao criar gráfico mensal:', error);
+            ChartsManager.showNoDataMessage(canvas.getContext('2d'), 'Erro ao criar gráfico');
         }
     },
     
-    // Generate weekday spending chart
+    // Gráfico de dias da semana (radar simples)
     generateWeekdayChart: () => {
+        console.log('Gerando gráfico de dias da semana...');
+        
         const canvas = document.getElementById('weekdayChart');
         if (!canvas) {
-            console.warn('Weekday chart canvas not found');
+            console.error('Canvas weekdayChart não encontrado');
             return;
         }
         
-        const ctx = canvas.getContext('2d');
+        if (!ChartsManager.isWorking()) {
+            console.error('ChartsManager não está funcionando');
+            ChartsManager.showNoDataMessage(canvas.getContext('2d'), 'Chart.js não carregado');
+            return;
+        }
         
-        // Destroy existing chart
+        // Destruir gráfico existente
         if (ChartsManager.charts.weekdayChart) {
             ChartsManager.charts.weekdayChart.destroy();
             delete ChartsManager.charts.weekdayChart;
         }
         
-        // Calculate weekday totals
-        const weekdayTotals = [0, 0, 0, 0, 0, 0, 0]; // Sunday to Saturday
+        // Calcular totais por dia da semana
+        const weekdayTotals = [0, 0, 0, 0, 0, 0, 0]; // Dom a Sab
         const weekdayNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
         
         STATE.transactions.forEach(transaction => {
             if (transaction.amount > 0) {
-                const day = new Date(transaction.date + 'T00:00:00').getDay();
+                const date = new Date(transaction.date + 'T00:00:00');
+                const day = date.getDay();
                 weekdayTotals[day] += transaction.amount;
             }
         });
         
+        console.log('Totais por dia da semana:', weekdayTotals);
+        
         try {
-            ChartsManager.charts.weekdayChart = new Chart(ctx, {
+            console.log('Criando gráfico radar...');
+            ChartsManager.charts.weekdayChart = new Chart(canvas, {
                 type: 'radar',
                 data: {
                     labels: weekdayNames,
                     datasets: [{
-                        label: 'Gastos por Dia da Semana',
+                        label: 'Gastos por Dia',
                         data: weekdayTotals,
-                        backgroundColor: CONFIG.CHART_COLORS[2] + '40',
-                        borderColor: CONFIG.CHART_COLORS[2],
-                        borderWidth: 2,
-                        pointBackgroundColor: CONFIG.CHART_COLORS[2],
-                        pointBorderColor: '#fff',
-                        pointHoverBackgroundColor: '#fff',
-                        pointHoverBorderColor: CONFIG.CHART_COLORS[2]
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 2
                     }]
                 },
                 options: {
@@ -249,79 +245,82 @@ const ChartsManager = {
                     plugins: {
                         legend: {
                             display: false
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: (context) => {
-                                    return `${context.label}: ${UTILS.formatCurrency(context.parsed.r)}`;
-                                }
-                            }
                         }
                     },
                     scales: {
                         r: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: (value) => UTILS.formatCurrency(value)
-                            }
+                            beginAtZero: true
                         }
                     }
                 }
             });
+            console.log('Gráfico de dias da semana criado com sucesso');
         } catch (error) {
-            console.error('Error creating weekday chart:', error);
-            ChartsManager.showNoDataMessage(ctx, 'Erro ao carregar gráfico');
+            console.error('Erro ao criar gráfico de dias da semana:', error);
+            ChartsManager.showNoDataMessage(canvas.getContext('2d'), 'Erro ao criar gráfico');
         }
     },
     
-    // Generate top establishments chart
+    // Gráfico de estabelecimentos (barras horizontais)
     generateEstablishmentChart: () => {
+        console.log('Gerando gráfico de estabelecimentos...');
+        
         const canvas = document.getElementById('establishmentChart');
         if (!canvas) {
-            console.warn('Establishment chart canvas not found');
+            console.error('Canvas establishmentChart não encontrado');
             return;
         }
         
-        const ctx = canvas.getContext('2d');
+        if (!ChartsManager.isWorking()) {
+            console.error('ChartsManager não está funcionando');
+            ChartsManager.showNoDataMessage(canvas.getContext('2d'), 'Chart.js não carregado');
+            return;
+        }
         
-        // Destroy existing chart
+        // Destruir gráfico existente
         if (ChartsManager.charts.establishmentChart) {
             ChartsManager.charts.establishmentChart.destroy();
             delete ChartsManager.charts.establishmentChart;
         }
         
-        // Calculate establishment totals
+        // Calcular totais por estabelecimento
         const establishmentTotals = {};
         STATE.transactions.forEach(transaction => {
             if (transaction.amount > 0) {
-                establishmentTotals[transaction.name] = (establishmentTotals[transaction.name] || 0) + transaction.amount;
+                const name = transaction.name;
+                establishmentTotals[name] = (establishmentTotals[name] || 0) + transaction.amount;
             }
         });
         
-        // Get top 10 establishments
+        // Top 10 estabelecimentos
         const topEstablishments = Object.entries(establishmentTotals)
             .sort((a, b) => b[1] - a[1])
             .slice(0, 10);
         
+        console.log('Top estabelecimentos:', topEstablishments);
+        
         if (topEstablishments.length === 0) {
-            ChartsManager.showNoDataMessage(ctx, 'Nenhuma transação disponível');
+            ChartsManager.showNoDataMessage(canvas.getContext('2d'), 'Nenhum estabelecimento');
             return;
         }
         
-        const labels = topEstablishments.map(([name]) => name.length > 20 ? name.substring(0, 20) + '...' : name);
+        const labels = topEstablishments.map(([name]) => 
+            name.length > 20 ? name.substring(0, 20) + '...' : name
+        );
         const amounts = topEstablishments.map(([_, amount]) => amount);
         
         try {
-            ChartsManager.charts.establishmentChart = new Chart(ctx, {
+            console.log('Criando gráfico de estabelecimentos...');
+            ChartsManager.charts.establishmentChart = new Chart(canvas, {
                 type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Gastos por Estabelecimento',
+                        label: 'Gastos',
                         data: amounts,
-                        backgroundColor: CONFIG.CHART_COLORS[3] + '80',
-                        borderColor: CONFIG.CHART_COLORS[3],
-                        borderWidth: 2
+                        backgroundColor: '#FFCE56',
+                        borderColor: '#FFCE56',
+                        borderWidth: 1
                     }]
                 },
                 options: {
@@ -331,98 +330,39 @@ const ChartsManager = {
                     plugins: {
                         legend: {
                             display: false
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: (context) => {
-                                    return `Gasto: ${UTILS.formatCurrency(context.parsed.x)}`;
-                                }
-                            }
                         }
                     },
                     scales: {
                         x: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: (value) => UTILS.formatCurrency(value)
-                            }
+                            beginAtZero: true
                         }
                     }
                 }
             });
+            console.log('Gráfico de estabelecimentos criado com sucesso');
         } catch (error) {
-            console.error('Error creating establishment chart:', error);
-            ChartsManager.showNoDataMessage(ctx, 'Erro ao carregar gráfico');
+            console.error('Erro ao criar gráfico de estabelecimentos:', error);
+            ChartsManager.showNoDataMessage(canvas.getContext('2d'), 'Erro ao criar gráfico');
         }
     },
     
-    // Show category details modal
-    showCategoryDetails: (category) => {
-        const categoryTransactions = STATE.transactions.filter(t => 
-            t.category === category
-        );
-        
-        // Group by month
-        const monthlyData = {};
-        categoryTransactions.forEach(t => {
-            const month = t.date.substring(0, 7);
-            if (!monthlyData[month]) {
-                monthlyData[month] = [];
-            }
-            monthlyData[month].push(t);
-        });
-        
-        let content = `
-            <div class="category-details-header">
-                <h3>${category}</h3>
-                <p>Total de transações: ${categoryTransactions.length}</p>
-                <p>Valor total: ${UTILS.formatCurrency(categoryTransactions.reduce((sum, t) => sum + t.amount, 0))}</p>
-            </div>
-        `;
-        
-        // Show monthly breakdown
-        const sortedMonths = Object.keys(monthlyData).sort().reverse();
-        
-        sortedMonths.forEach(month => {
-            const monthTransactions = monthlyData[month];
-            const monthTotal = monthTransactions.reduce((sum, t) => sum + t.amount, 0);
-            
-            content += `
-                <div class="month-section">
-                    <h4>${new Date(month + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</h4>
-                    <p class="month-total">${UTILS.formatCurrency(monthTotal)}</p>
-                    <div class="month-transactions">
-                        ${monthTransactions.map(t => `
-                            <div class="transaction-detail">
-                                <span class="transaction-name">${t.name}</span>
-                                <span class="transaction-date">${UTILS.formatDate(t.date)}</span>
-                                <span class="transaction-amount">${UTILS.formatCurrency(t.amount)}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
-        });
-        
-        showModal(`Detalhes da Categoria: ${category}`, content);
-    },
-    
-    // Show no data message on canvas
+    // Mostrar mensagem quando não há dados
     showNoDataMessage: (ctx, message) => {
         const canvas = ctx.canvas;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary') || '#666';
-        ctx.font = '16px Inter, sans-serif';
+        ctx.fillStyle = '#666';
+        ctx.font = '16px Arial';
         ctx.textAlign = 'center';
         ctx.fillText(message, canvas.width / 2, canvas.height / 2);
     },
     
-    // Refresh all charts
+    // Atualizar todos os gráficos
     refreshAll: () => {
-        // Only refresh if Chart.js is available
-        if (typeof Chart === 'undefined') {
-            console.warn('Chart.js not available - cannot refresh charts');
+        console.log('Atualizando todos os gráficos...');
+        
+        if (!ChartsManager.isWorking()) {
+            console.error('ChartsManager não está funcionando - não é possível atualizar gráficos');
             return;
         }
         
@@ -431,325 +371,75 @@ const ChartsManager = {
             ChartsManager.generateMonthChart();
             ChartsManager.generateWeekdayChart();
             ChartsManager.generateEstablishmentChart();
+            console.log('Todos os gráficos atualizados com sucesso');
         } catch (error) {
-            console.error('Error refreshing charts:', error);
+            console.error('Erro ao atualizar gráficos:', error);
         }
-    },
-    
-    // Update chart colors based on theme
-    updateColors: () => {
-        if (typeof Chart === 'undefined') return;
-        
-        const isDark = STATE.currentTheme === 'dark';
-        const textColor = isDark ? '#f1f5f9' : '#1e293b';
-        const borderColor = isDark ? '#334155' : '#e2e8f0';
-        
-        Chart.defaults.color = textColor;
-        Chart.defaults.borderColor = borderColor;
-        
-        // Update existing charts
-        Object.values(ChartsManager.charts).forEach(chart => {
-            if (chart && chart.options && chart.options.plugins && chart.options.plugins.legend) {
-                if (chart.options.plugins.legend.labels) {
-                    chart.options.plugins.legend.labels.color = textColor;
-                }
-                chart.update('none'); // Update without animation
-            }
-        });
-    },
-    
-    // Export chart as image
-    exportChart: (chartId, filename) => {
-        const canvas = document.getElementById(chartId);
-        if (!canvas) {
-            showToast('Gráfico não encontrado', 'error');
-            return;
-        }
-        
-        try {
-            // Create download link
-            const link = document.createElement('a');
-            link.download = filename || `${chartId}_${new Date().toISOString().split('T')[0]}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-            
-            showToast('Gráfico exportado com sucesso!', 'success');
-        } catch (error) {
-            console.error('Error exporting chart:', error);
-            showToast('Erro ao exportar gráfico', 'error');
-        }
-    },
-    
-    // Check if charts are working
-    isWorking: () => {
-        return typeof Chart !== 'undefined';
     }
 };
 
-// Chart utilities
-const ChartUtils = {
-    // Get chart data for export
-    getChartData: (chartType) => {
-        switch (chartType) {
-            case 'category':
-                return ChartsManager.getCategoryData();
-            case 'monthly':
-                return ChartsManager.getMonthlyData();
-            case 'weekday':
-                return ChartsManager.getWeekdayData();
-            case 'establishment':
-                return ChartsManager.getEstablishmentData();
-            default:
-                return null;
-        }
-    },
-    
-    // Generate chart configuration for export
-    getChartConfig: (type, data) => {
-        const configs = {
-            category: {
-                type: 'pie',
-                data: data,
-                options: {
-                    responsive: false,
-                    plugins: {
-                        legend: { position: 'bottom' }
-                    }
-                }
-            },
-            monthly: {
-                type: 'bar',
-                data: data,
-                options: {
-                    responsive: false,
-                    scales: {
-                        y: { beginAtZero: true }
-                    }
-                }
-            }
-        };
-        
-        return configs[type] || null;
-    }
-};
-
-// Initialize charts when DOM is ready
+// Aguardar Chart.js carregar
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize charts immediately when Chart.js is available
+    console.log('DOM carregado, verificando Chart.js...');
+    
+    // Tentar inicializar imediatamente
     if (typeof Chart !== 'undefined') {
+        console.log('Chart.js já disponível');
         ChartsManager.init();
-        console.log('Charts initialized successfully');
     } else {
-        // Wait for Chart.js to load
+        console.log('Aguardando Chart.js carregar...');
+        
+        // Verificar a cada 100ms por até 10 segundos
+        let attempts = 0;
+        const maxAttempts = 100;
+        
         const checkChart = setInterval(() => {
+            attempts++;
+            
             if (typeof Chart !== 'undefined') {
+                console.log('Chart.js carregado após', attempts * 100, 'ms');
                 ChartsManager.init();
-                console.log('Charts initialized successfully after waiting');
+                clearInterval(checkChart);
+            } else if (attempts >= maxAttempts) {
+                console.error('Chart.js não carregou após 10 segundos');
                 clearInterval(checkChart);
             }
         }, 100);
-        
-        // Stop checking after 10 seconds
-        setTimeout(() => clearInterval(checkChart), 10000);
     }
 });
 
-// Listen for theme changes
-eventEmitter.on('themeChanged', () => {
-    if (ChartsManager.isWorking()) {
-        ChartsManager.updateColors();
-    }
-});
-
-// Listen for data changes
-eventEmitter.on('transactionAdded', () => {
-    if (!document.getElementById('charts-area').classList.contains('hidden') && ChartsManager.isWorking()) {
-        setTimeout(() => ChartsManager.refreshAll(), 500);
-    }
-});
-
-eventEmitter.on('transactionDeleted', () => {
-    if (!document.getElementById('charts-area').classList.contains('hidden') && ChartsManager.isWorking()) {
-        setTimeout(() => ChartsManager.refreshAll(), 500);
-    }
-});
-
-eventEmitter.on('transactionUpdated', () => {
-    if (!document.getElementById('charts-area').classList.contains('hidden') && ChartsManager.isWorking()) {
-        setTimeout(() => ChartsManager.refreshAll(), 500);
-    }
-});
-
-// Goals charts (smaller versions for goals screen)
-const GoalsCharts = {
-    // Generate category chart for goals screen
-    generateGoalsCategoryChart: () => {
-        const canvas = document.getElementById('goalsCategoryChart');
-        if (!canvas || !ChartsManager.isWorking()) return;
-        
-        const ctx = canvas.getContext('2d');
-        
-        // Destroy existing chart
-        if (ChartsManager.charts.goalsCategoryChart) {
-            ChartsManager.charts.goalsCategoryChart.destroy();
-            delete ChartsManager.charts.goalsCategoryChart;
-        }
-        
-        // Get current month data
-        const currentMonth = new Date().toISOString().substring(0, 7);
-        const monthlyTransactions = TransactionManager.getByDateRange(
-            `${currentMonth}-01`, 
-            `${currentMonth}-31`
-        );
-        
-        const categoryTotals = {};
-        monthlyTransactions.forEach(transaction => {
-            if (transaction.category && transaction.amount > 0) {
-                categoryTotals[transaction.category] = (categoryTotals[transaction.category] || 0) + transaction.amount;
-            }
-        });
-        
-        const categories = Object.keys(categoryTotals);
-        const amounts = Object.values(categoryTotals);
-        
-        if (categories.length === 0) {
-            ChartsManager.showNoDataMessage(ctx, 'Sem gastos este mês');
-            return;
-        }
-        
-        const colors = categories.map((category, index) => {
-            return STATE.customColors[category] || CONFIG.CHART_COLORS[index % CONFIG.CHART_COLORS.length];
-        });
-        
-        try {
-            ChartsManager.charts.goalsCategoryChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: categories,
-                    datasets: [{
-                        data: amounts,
-                        backgroundColor: colors,
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                padding: 10,
-                                font: { size: 10 }
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: (context) => {
-                                    const label = context.label || '';
-                                    const value = UTILS.formatCurrency(context.parsed);
-                                    return `${label}: ${value}`;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        } catch (error) {
-            console.error('Error creating goals category chart:', error);
-        }
-    },
+// Função global para mostrar gráficos
+window.showCharts = () => {
+    console.log('showCharts chamado');
     
-    // Generate spending chart for goals screen (last 7 days)
-    generateGoalsSpendingChart: () => {
-        const canvas = document.getElementById('goalsSpendingChart');
-        if (!canvas || !ChartsManager.isWorking()) return;
-        
-        const ctx = canvas.getContext('2d');
-        
-        // Destroy existing chart
-        if (ChartsManager.charts.goalsSpendingChart) {
-            ChartsManager.charts.goalsSpendingChart.destroy();
-            delete ChartsManager.charts.goalsSpendingChart;
-        }
-        
-        // Get last 7 days data
-        const today = new Date();
-        const dailyTotals = [];
-        const labels = [];
-        
-        for (let i = 6; i >= 0; i--) {
-            const date = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
-            const dateStr = date.toISOString().split('T')[0];
-            
-            const dayTransactions = STATE.transactions.filter(t => 
-                t.date === dateStr && t.amount > 0
-            );
-            const dayTotal = dayTransactions.reduce((sum, t) => sum + t.amount, 0);
-            
-            dailyTotals.push(dayTotal);
-            labels.push(date.toLocaleDateString('pt-BR', { weekday: 'short' }));
-        }
-        
-        try {
-            ChartsManager.charts.goalsSpendingChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Gastos Diários',
-                        data: dailyTotals,
-                        borderColor: CONFIG.CHART_COLORS[1],
-                        backgroundColor: CONFIG.CHART_COLORS[1] + '20',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: (context) => {
-                                    return `Gasto: ${UTILS.formatCurrency(context.parsed.y)}`;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: (value) => UTILS.formatCurrency(value),
-                                font: { size: 10 }
-                            }
-                        },
-                        x: {
-                            ticks: {
-                                font: { size: 10 }
-                            }
-                        }
-                    }
-                }
-            });
-        } catch (error) {
-            console.error('Error creating goals spending chart:', error);
-        }
-    },
+    hideAllScreens();
+    document.getElementById('charts-area').classList.remove('hidden');
     
-    // Refresh goals charts
-    refreshGoalsCharts: () => {
+    // Aguardar um pouco para o DOM se ajustar
+    setTimeout(() => {
         if (ChartsManager.isWorking()) {
-            GoalsCharts.generateGoalsCategoryChart();
-            GoalsCharts.generateGoalsSpendingChart();
+            console.log('Atualizando gráficos...');
+            ChartsManager.refreshAll();
+        } else {
+            console.error('ChartsManager não está funcionando');
+            showToast('Chart.js não carregado. Recarregue a página.', 'error');
         }
+    }, 300);
+};
+
+// Função global para atualizar gráficos
+window.refreshCharts = () => {
+    console.log('refreshCharts chamado');
+    
+    if (ChartsManager.isWorking()) {
+        ChartsManager.refreshAll();
+    } else {
+        console.error('ChartsManager não está funcionando');
+        showToast('Chart.js não está disponível', 'error');
     }
 };
 
-// Export goals charts functionality
-window.GoalsCharts = GoalsCharts;
+// Exportar para uso global
+window.ChartsManager = ChartsManager;
+
+console.log('Charts.js carregado');
